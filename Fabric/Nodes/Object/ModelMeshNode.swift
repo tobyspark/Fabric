@@ -24,6 +24,7 @@ public class ModelMeshNode : MeshNode
                                          outputMesh] }
 
     private var mesh: Object? = nil
+
     private var textureLoader:MTKTextureLoader
 
     public required init(context: Context)

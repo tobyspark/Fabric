@@ -10,7 +10,7 @@ import Satin
 import simd
 import Metal
 
-public class PerspectiveCameraNode : BaseObjectNode, NodeProtocol
+public class PerspectiveCameraNode : BaseObjectNode, ObjectNodeProtocol
 {
     public static var nodeType = Node.NodeType.Camera
     public static let name = "Perspective Camera"
@@ -24,6 +24,8 @@ public class PerspectiveCameraNode : BaseObjectNode, NodeProtocol
     public override var ports: [any NodePortProtocol] { super.ports + [outputCamera] }
 
     private let camera = PerspectiveCamera(position: .init(repeating: 5.0), near: 0.01, far: 500.0, fov: 30)
+
+    var object: Object? { self.camera }
 
     public required init(context:Context)
     {

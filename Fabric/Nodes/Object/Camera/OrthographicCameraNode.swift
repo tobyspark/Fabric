@@ -1,5 +1,5 @@
 //
-//  PerspectiveCameraNode.swift
+//  OrthographicCameraNode.swift
 //  Fabric
 //
 //  Created by Anton Marini on 4/26/25.
@@ -10,7 +10,7 @@ import Satin
 import simd
 import Metal
 
-public class OrthographicCameraNode : BaseObjectNode, NodeProtocol
+public class OrthographicCameraNode : BaseObjectNode, ObjectNodeProtocol
 {
     public static var nodeType = Node.NodeType.Camera
     public static let name = "Orthographic Camera"
@@ -24,6 +24,9 @@ public class OrthographicCameraNode : BaseObjectNode, NodeProtocol
     public override var ports: [any NodePortProtocol] { super.ports + [outputCamera] }
 
     private let camera = OrthographicCamera(left: -1, right: 1, bottom: -1, top: 1, near: 0.01, far: 500.0)
+    
+    var object: Object? { self.camera }
+
 
     public required init(context:Context)
     {

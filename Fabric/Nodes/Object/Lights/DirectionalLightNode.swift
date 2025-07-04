@@ -11,7 +11,7 @@ import Satin
 import simd
 import Metal
 
-public class DirectionalLightNode : BaseObjectNode, NodeProtocol
+public class DirectionalLightNode : BaseObjectNode, ObjectNodeProtocol
 {
     public static let name = "Directional Light"
     public static var nodeType = Node.NodeType.Light
@@ -31,6 +31,8 @@ public class DirectionalLightNode : BaseObjectNode, NodeProtocol
     public override var ports: [any NodePortProtocol] { super.ports +  [outputLight] }
     
     private var light: DirectionalLight =  DirectionalLight(color: [1.0, 1.0, 1.0], intensity: 1.0)
+
+    var object: Object? { self.light }
 
 //    let lightHelperGeo = BoxGeometry(width: 0.1, height: 0.1, depth: 0.5)
 //    let lightHelperMat = BasicDiffuseMaterial(hardness: 0.7)

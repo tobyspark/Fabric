@@ -10,7 +10,7 @@ import Satin
 import simd
 import Metal
 
-public class MeshNode : BaseObjectNode, NodeProtocol
+public class MeshNode : BaseObjectNode, NodeProtocol, ObjectNodeProtocol
 {
     public class var name:String { "Mesh" }
     public class var nodeType:Node.NodeType  { .Mesh }
@@ -37,6 +37,8 @@ public class MeshNode : BaseObjectNode, NodeProtocol
     
     private var mesh: Mesh? = nil
 
+    var object: Object? { self.mesh }
+    
     public required init(context: Context)
     {
         self.inputCastsShadow = BoolParameter("Enable Shadows", true, .button)

@@ -8,6 +8,7 @@
 import SwiftUI
 import Metal
 import Satin
+import simd
 
 // Graph Execution Engine
 public class GraphRenderer : MetalViewRenderer
@@ -16,11 +17,16 @@ public class GraphRenderer : MetalViewRenderer
     private var executionCount = 0
     public var context:Context!
     
+    private let renderer:Renderer
+    private let scene = Object()
+    public var clearColor:simd_float4 = simd_float4(0.0, 0.0, 0.0, 1.0)
+    
     public let graph:Graph
     
     public init(context:Context, graph:Graph)
     {
         self.context = context
+        self.renderer = Renderer(context: context)
         self.graph = graph
         print("Init Graph Execution Engine")
     }
@@ -40,7 +46,6 @@ public class GraphRenderer : MetalViewRenderer
     }
     
     // MARK: - Rendering
-    
     public func execute(graph:Graph,
                         executionContext:GraphExecutionContext,
                         renderPassDescriptor: MTLRenderPassDescriptor,
@@ -48,20 +53,43 @@ public class GraphRenderer : MetalViewRenderer
     {
         self.executionCount += 1
         
-        var nodesWeAreExecuting:[Node] = []
+        var nodesWeAreExecuting:[any NodeProtocol] = []
 
-        let renderNodes = graph.nodes.filter( { $0.nodeType == .Renderer })
-        let subgraphNodes = graph.nodes.filter( { $0.nodeType == .Subgraph })
+        // TODO: Sort
+        let objectsNodesToProcess: [any NodeProtocol] = graph.nodes.filter( {
+            $0.nodeType == .Object || $0.nodeType == .Light || $0.nodeType == .Mesh || $0.nodeType == .Camera
+        })
 
-        for renderNode in renderNodes + subgraphNodes
+        // TODO: Stupid
+        let objectNodesToRender = objectsNodesToProcess.filter( { $0.nodeType != .Camera })
+        let cameraNodes = objectsNodesToProcess.filter( { $0.nodeType == .Camera })
+        
+        for objectNode in objectsNodesToProcess// + subgraphNodes
         {
             let _ = processGraph(graph:graph,
-                                 node: renderNode,
+                                 node: objectNode,
                                  executionContext:executionContext,
                                  renderPassDescriptor: renderPassDescriptor,
                                  commandBuffer: commandBuffer,
                                  nodesWeAreExecuting:&nodesWeAreExecuting)
         }
+        
+        
+        let cameraObjects = cameraNodes.compactMap( { ($0 as? any ObjectNodeProtocol)?.object as? Camera } )
+        
+        let sceneObjects = objectNodesToRender.compactMap( { ($0 as? any ObjectNodeProtocol)?.object } )
+        
+        // In theory this early bails if object is already in the scene?
+        self.scene.add(sceneObjects)
+        
+        self.renderer.draw(renderPassDescriptor: renderPassDescriptor,
+                           commandBuffer: commandBuffer,
+                           scene: scene,
+                           cameras: cameraObjects,
+                           viewports: [self.renderer.viewport])
+        
+        //            self.scene.removeAll()
+        
         
     }
 
@@ -70,7 +98,7 @@ public class GraphRenderer : MetalViewRenderer
                               executionContext:GraphExecutionContext,
                               renderPassDescriptor: MTLRenderPassDescriptor,
                               commandBuffer: MTLCommandBuffer,
-                              nodesWeAreExecuting:inout  [Node],
+                              nodesWeAreExecuting:inout  [any NodeProtocol ],
                               pruningNodes:[any NodeProtocol] = [])
     {
         
@@ -108,7 +136,6 @@ public class GraphRenderer : MetalViewRenderer
                      commandBuffer: commandBuffer)
         
         self.lastGraphExecutionTime = executionContext.timing.time
-
     }
     
     override public func resize(size: (width: Float, height: Float), scaleFactor: Float)

@@ -70,12 +70,6 @@ public class DeferredRenderNode : Node, NodeProtocol
         {
             fatalError("Required Decode Context Not set")
         }
-        
-        self.renderer = Renderer(context: decodeContext.documentContext, frameBufferOnly:false)
-        self.renderer.depthStoreAction = .store
-        self.renderer.depthLoadAction = .clear
-        self.renderer.size.width = 1920
-        self.renderer.size.height = 1080
 
         let container = try decoder.container(keyedBy: CodingKeys.self)
 
@@ -87,6 +81,13 @@ public class DeferredRenderNode : Node, NodeProtocol
 
         self.inputClearColor = try container.decode(Float4Parameter.self , forKey:.inputClearColorParam)
         self.inputResolution = try container.decode(Int2Parameter.self, forKey: .inputResolution)
+        
+        self.renderer = Renderer(context: decodeContext.documentContext, frameBufferOnly:false)
+        self.renderer.depthStoreAction = .store
+        self.renderer.depthLoadAction = .clear
+        self.renderer.size.width = 1920
+        self.renderer.size.height = 1080
+
         
         try super.init(from: decoder)
     }
@@ -114,6 +115,8 @@ public class DeferredRenderNode : Node, NodeProtocol
         {
             let rpd1 = MTLRenderPassDescriptor()
 
+            self.renderer.size = (width: Float(self.inputResolution.value.x), height: Float(self.inputResolution.value.y) )
+            
             self.renderer.clearColor = .init( self.inputClearColor.value )
                         
             renderer.draw(renderPassDescriptor: rpd1,

@@ -11,6 +11,11 @@ import Satin
 import simd
 import Metal
 
+protocol ObjectNodeProtocol : NodeProtocol
+{
+    var object:Satin.Object? { get }
+}
+
 public class BaseObjectNode : Node
 {
     // Params
