@@ -46,6 +46,43 @@ struct ContentView: View {
     private let zoomMax = 2.0
     private let canvasSize = 10000.0
     private let halfCanvasSize = 5000.0
+
+    // Multiplicative step for the ⌘+ / ⌘- menu commands.
+    private static let zoomStep = 1.25
+
+    // Shared by the pinch gesture and the zoom menu commands: converts a point
+    // in the visible viewport (unit space, e.g. its centre) into the
+    // canvas-relative anchor `scaleEffect` needs so magnification pivots there.
+    private func canvasAnchor(viewportUnitX u: CGFloat, viewportUnitY v: CGFloat, scale: CGFloat) -> UnitPoint {
+        let containerSize = self.document.editingContext.currentScrollContainerSize
+        let contentOffset = self.document.editingContext.currentScrollContentOffset
+
+        let visibleWidthInCanvas  = containerSize.width  / scale
+        let visibleHeightInCanvas = containerSize.height / scale
+
+        let offsetXInCanvas = contentOffset.x / scale
+        let offsetYInCanvas = contentOffset.y / scale
+
+        let canvasX = offsetXInCanvas + u * visibleWidthInCanvas
+        let canvasY = offsetYInCanvas + v * visibleHeightInCanvas
+
+        let newX = max(0, min(1, canvasX / (self.canvasSize / scale)))
+        let newY = max(0, min(1, canvasY / (self.canvasSize / scale)))
+
+        return UnitPoint(x: newX, y: newY)
+    }
+
+    // Drives the Mac-idiom zoom menu items. Both the anchor and the
+    // magnification are set in one synchronous mutation so the canvas renders
+    // a single new frame that pivots on the viewport centre — mirroring the
+    // end-state of a pinch rather than jumping.
+    private func setMagnification(_ target: Double) {
+        let clamped = min(max(target, self.zoomMin), self.zoomMax)
+        guard clamped != self.finalMagnification else { return }
+
+        self.magnifyAnchor = self.canvasAnchor(viewportUnitX: 0.5, viewportUnitY: 0.5, scale: clamped)
+        self.finalMagnification = clamped
+    }
     
     var body: some View {
 
@@ -122,25 +159,9 @@ struct ContentView: View {
 
                                             let scale = proposedScale
 
-                                            let u = value.startAnchor.x
-                                            let v = value.startAnchor.y
-
-                                            let containerSize = self.document.editingContext.currentScrollContainerSize
-                                            let contentOffset = self.document.editingContext.currentScrollContentOffset
-
-                                            let visibleWidthInCanvas  = containerSize.width  / scale
-                                            let visibleHeightInCanvas = containerSize.height / scale
-
-                                            let offsetXInCanvas = contentOffset.x / scale
-                                            let offsetYInCanvas = contentOffset.y / scale
-
-                                            let canvasX = offsetXInCanvas + u * visibleWidthInCanvas
-                                            let canvasY = offsetYInCanvas + v * visibleHeightInCanvas
-
-                                            let newX = max(0, min(1, canvasX / (self.canvasSize / scale)))
-                                            let newY = max(0, min(1, canvasY / (self.canvasSize / scale)))
-
-                                            magnifyAnchor = UnitPoint(x: newX, y: newY)
+                                            magnifyAnchor = self.canvasAnchor(viewportUnitX: value.startAnchor.x,
+                                                                              viewportUnitY: value.startAnchor.y,
+                                                                              scale: scale)
                                         })
                                         .onEnded { value in
                                             self.canvasHitTestingEnabled = true
@@ -200,6 +221,17 @@ struct ContentView: View {
             .focusedSceneValue(\.editorFocusTarget, Binding(
                 get: { self.focusTarget },
                 set: { self.focusTarget = $0 }
+            ))
+            // Expose canvas zoom to the View-menu commands. Rebuilt whenever
+            // `finalMagnification` changes so the menu items enable/disable and
+            // the "Actual Size" check state stay current.
+            .focusedSceneValue(\.editorZoomActions, EditorZoomActions(
+                zoomIn: { self.setMagnification(self.finalMagnification * Self.zoomStep) },
+                zoomOut: { self.setMagnification(self.finalMagnification / Self.zoomStep) },
+                actualSize: { self.setMagnification(1.0) },
+                canZoomIn: self.finalMagnification < self.zoomMax,
+                canZoomOut: self.finalMagnification > self.zoomMin,
+                isActualSize: self.finalMagnification == 1.0
             ))
             .sheet(
                 isPresented: Binding(

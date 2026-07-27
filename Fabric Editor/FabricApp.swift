@@ -48,6 +48,8 @@ struct FabricApp: App {
 
             ViewCommands()
 
+            ZoomCommands()
+
             CommandGroup(after: .appInfo)
             {
                 CheckForUpdatesView(updater: updaterController.updater)
@@ -217,8 +219,47 @@ struct ViewCommands: Commands {
     }
 }
 
+struct ZoomCommands: Commands {
+    @FocusedValue(\.editorZoomActions) private var zoom: EditorZoomActions?
+
+    var body: some Commands {
+        // Sits in the View menu next to the sidebar toggle, matching the
+        // standard Mac zoom idiom of ⌘+ / ⌘- / ⌘0.
+        CommandGroup(after: .sidebar) {
+            Button("Zoom In") { self.zoom?.zoomIn() }
+                .keyboardShortcut("+", modifiers: .command)
+                .disabled(!(self.zoom?.canZoomIn ?? false))
+
+            Button("Zoom Out") { self.zoom?.zoomOut() }
+                .keyboardShortcut("-", modifiers: .command)
+                .disabled(!(self.zoom?.canZoomOut ?? false))
+
+            Button("Actual Size") { self.zoom?.actualSize() }
+                .keyboardShortcut("0", modifiers: .command)
+                .disabled(self.zoom.map(\.isActualSize) ?? true)
+
+            Divider()
+        }
+    }
+}
+
+/// Canvas zoom actions the View-menu commands drive, published by the editor
+/// through `FocusedValues.editorZoomActions`.
+struct EditorZoomActions {
+    let zoomIn: () -> Void
+    let zoomOut: () -> Void
+    let actualSize: () -> Void
+    let canZoomIn: Bool
+    let canZoomOut: Bool
+    let isActualSize: Bool
+}
+
 struct DocumentFocusedValueKey: FocusedValueKey {
   typealias Value = Binding<FabricDocument>
+}
+
+struct EditorZoomActionsKey: FocusedValueKey {
+    typealias Value = EditorZoomActions
 }
 
 struct EditorFocusTargetValueKey: FocusedValueKey {
@@ -246,6 +287,18 @@ extension FocusedValues
         }
         set {
             self[EditorFocusTargetValueKey.self] = newValue
+        }
+    }
+
+    /// Canvas zoom actions for the View-menu commands, published by the
+    /// focused editor scene.
+    var editorZoomActions: EditorZoomActionsKey.Value?
+    {
+        get {
+            self[EditorZoomActionsKey.self]
+        }
+        set {
+            self[EditorZoomActionsKey.self] = newValue
         }
     }
 }
