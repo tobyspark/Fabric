@@ -4,6 +4,9 @@
 //
 
 import SwiftUI
+#if os(macOS)
+import AppKit
+#endif
 
 struct GraphNodesView: View
 {
@@ -107,7 +110,7 @@ struct GraphNodesView: View
             currentGraph.selectedNodes.forEach { currentGraph.viewModel(for: $0).isDragging = true }
         }
 
-        let t = value.translation
+        let t = self.constrainedTranslation(value.translation)
         for node in currentGraph.selectedNodes
         {
             let nodeViewModel = currentGraph.viewModel(for: node)
@@ -115,6 +118,27 @@ struct GraphNodesView: View
                 nodeViewModel.offset = base + t
             }
         }
+    }
+
+    /// Mac idiom: holding Shift while dragging constrains movement to the
+    /// dominant axis. The modifier is read live (rather than captured at drag
+    /// start) so pressing or releasing Shift mid-drag updates the constraint.
+    private func constrainedTranslation(_ translation: CGSize) -> CGSize
+    {
+#if os(macOS)
+        guard NSEvent.modifierFlags.contains(.shift) else { return translation }
+
+        if abs(translation.width) >= abs(translation.height)
+        {
+            return CGSize(width: translation.width, height: 0)
+        }
+        else
+        {
+            return CGSize(width: 0, height: translation.height)
+        }
+#else
+        return translation
+#endif
     }
 
     private func calcDragEnded(currentGraph: Graph)
