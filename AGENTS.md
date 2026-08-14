@@ -85,7 +85,7 @@ For all development:
 - From those it composes, both final:
   - `var title` — what to call the node: `userName ?? canonicalName`. Note `subtitle` is deliberately absent: it accompanies the title, it does not replace it.
   - `var debugDescription` — every name the node answers to, e.g. `Math Expression (sin(x) · My Rename)`. `print(node)` and `"\(node)"` give it: log a node directly rather than reaching for a name. Use `canonicalName` where brevity or per-frame cost matters.
-- `subtitleSubject` must fire whenever state feeding `subtitle` changes — never from `execute`: execution is pull-based, so an un-pulled node would keep a stale title. Port-derived `subtitle` wires each source port with `port.feedsSubtitle()` in `postInit()`; `subtitle` derived from non-port state fires `subtitleSubject.send()` from that state's `didSet`. `NodeViewModel` mirrors the node's `title` / `canonicalName` / `subtitle` observably, and adds `titleLabel` (`userName ?? subtitle`) — the label all title UI draws ahead of the canonical name.
+- `subtitleSubject` must fire whenever state feeding `subtitle` changes — never from `execute`: execution is pull-based, so an un-pulled node would keep a stale title. Port-derived: `port.feedsSubtitle()` in `postInit()` (BlendNode's Mode). Non-port state: `subtitleSubject.send()` in its `didSet` (StrategyNode's `strategy`). SubtitleNotificationConformanceTests enforces this. `NodeViewModel` mirrors the node's `title` / `canonicalName` / `subtitle` observably, and adds `titleLabel` (`userName ?? subtitle`) — the label all title UI draws ahead of the canonical name.
 - Execution is **pull-based**; one execute per node per pass.
 - `GraphRenderer` (executor and scheduler) today does not use `nodeExecutionMode` or `nodeTimeMode` but will in the future.
 - **Iterator (QC-style)** remains the multi-evaluation macro; refinements allowed, paradigm fixed.
@@ -179,7 +179,6 @@ Some nodes operate identically regardless of what data flows through them (e.g. 
 | Topology recomputed each frame | No caching | Recompute only on connect/disconnect |
 | Type-erasure confusion | Mixing `any` with Equatable generics | Stay typed; use Utility/Log node for debug |
 | Serialization drift | Ad-hoc encoders | Always through registry + `PortType` |
-| Stale node title on canvas/inspector | `subtitle` input changed without notifying | Port-derived: `port.feedsSubtitle()` in `postInit()`. Non-port state: fire `subtitleSubject.send()` in its `didSet`. Never from `execute` — pull-based execution may never run it |
 
 ---
 
@@ -204,7 +203,6 @@ Some nodes operate identically regardless of what data flows through them (e.g. 
 - [ ] If Node dynamically changes port count or type, we should only trigger via Setting in Settings View, not within the graph
 - [ ] If we have a Settings View, we should have a custom initializer so procedural graph creation has an entry to settings.
 - [ ] If we have a Settings View and a custom initializer, use a custom struct or enum for the settings
-- [ ] If the Node overrides `deriveSubtitle()`, every mutation of the state it derives from fires `subtitleSubject` — port-backed state wires `port.feedsSubtitle()` in `postInit()` (BlendNode's Mode already does), non-port state fires `subtitleSubject.send()` in its `didSet` (StrategyNode's `strategy` already does); never gated on `execute`
 - [ ] Setup needed by every construction path goes in a `postInit()` override (call `super`), not duplicated `required init` pairs
 - [ ] New Nodes should live in an appropriate spot in the NodeRegistry
 
