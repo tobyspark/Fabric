@@ -246,6 +246,8 @@ open class Node : Codable, Equatable, Identifiable, Hashable, Copyable, CustomDe
         {
             port.node = self
         }
+
+        self.postInit()
     }
 
     open func encode(to encoder:Encoder) throws
@@ -282,7 +284,16 @@ open class Node : Codable, Equatable, Identifiable, Hashable, Copyable, CustomDe
         {
             port.node = self
         }
+
+        self.postInit()
     }
+
+    // Called at the end of both designated inits, once ports are registered and
+    // owned. Override for setup every construction path needs (wiring, buffers,
+    // labels) instead of duplicating init overrides; call super. Two-phase init
+    // means all subclass stored properties are set by now, but the remainder of
+    // the subclass's own init body has not yet run.
+    open func postInit() { }
 
     open class func initWithContext(context: Context) throws -> Node
     {

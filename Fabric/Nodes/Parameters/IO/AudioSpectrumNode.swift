@@ -352,17 +352,6 @@ public class AudioSpectrumNode : Node
     private var wasConnectedObserver: Any?
     private var wasDisconnectedObserver: Any?
 
-    public required init(context: Context)
-    {
-        super.init(context: context)
-        self.commonPostSetup()
-    }
-
-    public required init(from decoder: any Decoder) throws
-    {
-        try super.init(from: decoder)
-        self.commonPostSetup()
-    }
 
     deinit
     {
@@ -370,8 +359,9 @@ public class AudioSpectrumNode : Node
         if let t = wasDisconnectedObserver { NotificationCenter.default.removeObserver(t) }
     }
 
-    private func commonPostSetup()
+    override public func postInit()
     {
+        super.postInit()
         self.captureDelegate.owner = self
         self.refreshAudioDeviceOptions()
 

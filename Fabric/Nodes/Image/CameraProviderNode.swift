@@ -108,25 +108,23 @@ public class CameraProviderNode : Node
         self.captureSession = AVCaptureSession()
 
         super.init(context: context)
-        
-        self.commonPostSetup()
     }
-    
-    
+
+
     required public init(from decoder: any Decoder) throws
     {
         // Forces the initialization when the class is accessed
         _ = CameraProviderNodeInitializer
-        
+
         self.captureSession = AVCaptureSession()
-                
+
         try super.init(from:decoder)
-        
-        self.commonPostSetup()
     }
     
-    func commonPostSetup()
+    override public func postInit()
     {
+        super.postInit()
+
         self.wasConnectedObserver = NotificationCenter.default.addObserver(forName: AVCaptureDevice.wasConnectedNotification, object: nil, queue: .main)
         { [weak self] notification in
             

@@ -92,8 +92,6 @@ public class BaseImageNode: Node, NodeFileLoadingProtocol
 
         super.init(context: context)
 
-        self.postInit()
-
         self.postSetupSynchronizePorts(allowReplace: true)
     }
 
@@ -113,8 +111,6 @@ public class BaseImageNode: Node, NodeFileLoadingProtocol
                                                 frameBufferOnly: false)
 
         super.init(context: context)
-
-        self.postInit()
 
         self.postSetupSynchronizePorts(allowReplace: false,
                                        preserveExistingImageInputPorts: Self.preserveDecodedImageInputPortsOnDecode)
@@ -209,8 +205,6 @@ public class BaseImageNode: Node, NodeFileLoadingProtocol
 
         try super.init(from: decoder)
 
-        self.postInit()
-        
         self.postSetupSynchronizePorts(allowReplace: false,
                                        preserveExistingImageInputPorts: Self.preserveDecodedImageInputPortsOnDecode)
     }
@@ -230,8 +224,9 @@ public class BaseImageNode: Node, NodeFileLoadingProtocol
         try super.encode(to: encoder)
     }
 
-    private func postInit()
+    override public func postInit()
     {
+        super.postInit()
         self.postProcessor.label = self.canonicalName + " Post Processor"
     }
     

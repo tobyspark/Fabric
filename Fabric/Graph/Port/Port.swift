@@ -116,7 +116,17 @@ extension UTType
     internal func sendBoxed(_ boxed: PortValue?, force: Bool) { sendBoxed(boxed) }
     
     @ObservationIgnored public weak var node: Node?
+
     @ObservationIgnored internal var onValueChanged: (() -> Void)?
+
+    /// Title wiring: this port's value feeds the owning node's `subtitle`.
+    /// Call from `postInit()` so every construction path is wired. Claims the
+    /// single `onValueChanged` slot; the subtitle conformance test turns a
+    /// later clobber into a failure rather than a stale title.
+    internal func feedsSubtitle()
+    {
+        self.onValueChanged = { [weak self] in self?.node?.subtitleSubject.send() }
+    }
 
     public internal(set) var connections: [Connection] = []
     @ObservationIgnored public let kind: PortKind

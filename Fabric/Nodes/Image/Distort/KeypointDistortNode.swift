@@ -43,23 +43,9 @@ public class KeypointDistortNode: BaseImageNode {
     private var disKeyPointStructBuffer:StructBuffer<simd_float2>!
     private var countBuffer:StructBuffer<UInt32>!
 
-    required init(context: Context, fileURL: URL) throws {
-        try super.init(context: context, fileURL: fileURL)
-        self.postInit()
-    }
-    
-    required init(context: Context) {
-        super.init(context: context)
-        self.postInit()
-    }
-    
-    required init(from decoder: any Decoder) throws {
-        try super.init(from: decoder)
-        self.postInit()
-    }
-    
-    private func postInit()
+    override public func postInit()
     {
+        super.postInit()
         self.refKeyPointStructBuffer = StructBuffer<simd_float2>(device: context.device, count: 1, label: "Reference Keypoint Struct Buffer")
         self.disKeyPointStructBuffer = StructBuffer<simd_float2>(device: context.device, count: 1, label: "Displacement Keypoint Struct Buffer")
         self.countBuffer = StructBuffer<UInt32>(device: context.device, count: 1, label: "Count Struct Buffer")

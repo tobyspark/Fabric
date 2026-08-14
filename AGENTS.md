@@ -187,7 +187,7 @@ Some nodes operate identically regardless of what data flows through them (e.g. 
 - Registration API must be readable and deterministic.
 - Provide var-proxy helpers (`port<Value>("Color")`, `portOrDefault("Scale",1.0)`).
 - Extend `PortType` centrally for new types.
-- Lifecycle: `init → registerPorts → attachParams → decode → subscribe → execute → send`.
+- Lifecycle: `init → registerPorts → attachParams → decode → postInit → subscribe → execute → send`. `postInit()` runs at the end of both designated inits — override it (calling `super`) for setup every construction path needs, instead of duplicating init overrides.
 
 ---
 
@@ -204,7 +204,8 @@ Some nodes operate identically regardless of what data flows through them (e.g. 
 - [ ] If Node dynamically changes port count or type, we should only trigger via Setting in Settings View, not within the graph
 - [ ] If we have a Settings View, we should have a custom initializer so procedural graph creation has an entry to settings.
 - [ ] If we have a Settings View and a custom initializer, use a custom struct or enum for the settings
-- [ ] If the Node overrides `deriveSubtitle()`, every mutation of the state it derives from fires `subtitleSubject.send()` (StrategyNode’s `strategy` already does)
+- [ ] If the Node overrides `deriveSubtitle()`, every mutation of the state it derives from fires `subtitleSubject.send()` (StrategyNode's `strategy` already does)
+- [ ] Setup needed by every construction path goes in a `postInit()` override (call `super`), not duplicated `required init` pairs
 - [ ] New Nodes should live in an appropriate spot in the NodeRegistry
 
 ---
