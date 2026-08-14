@@ -72,6 +72,15 @@ public class ScreenCaptureProviderNode: Node
     override public class var nodeTimeMode: Node.TimeMode { .TimeBase }
     override public class var nodeDescription: String { "Capture a display, window, or application and provide output Images" }
 
+    /// The selected capture source.
+    override public func deriveSubtitle() -> String? { self.inputCaptureSource.value }
+
+    override public func postInit()
+    {
+        super.postInit()
+        self.inputCaptureSource.feedsSubtitle()
+    }
+
     override public class func registerPorts(context: Context) -> [(name: String, port: Port)] {
         let ports = super.registerPorts(context: context)
 

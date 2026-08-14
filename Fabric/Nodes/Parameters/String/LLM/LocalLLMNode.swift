@@ -20,6 +20,15 @@ public class LocalLLMNode : Node
     override public class var nodeExecutionMode: Node.ExecutionMode { .Provider }
     override public class var nodeTimeMode: Node.TimeMode { .None }
     override public class var nodeDescription: String { "Provide a string prompt to a local LLM for evaluation via MLX-Swift-LM"}
+
+    /// The selected model.
+    override public func deriveSubtitle() -> String? { self.inputModel.value }
+
+    override public func postInit()
+    {
+        super.postInit()
+        self.inputModel.feedsSubtitle()
+    }
     
     // Models download to ~/.cache/huggingface/hub/
     
@@ -60,12 +69,12 @@ public class LocalLLMNode : Node
     public required init(context: Context)
     {
         super.init(context: context)
-        
+
         Task {
             try await self.llmEvaluator.load()
         }
     }
-    
+
     public required init(from decoder: any Decoder) throws
     {
         try super.init(from: decoder)

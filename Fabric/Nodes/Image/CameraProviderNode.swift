@@ -74,6 +74,9 @@ public class CameraProviderNode : Node
     override public class var nodeTimeMode: Node.TimeMode { .TimeBase }
     override public class var nodeDescription: String { "Connect to a Camera and stream video, providing Images"}
 
+    /// The selected camera device.
+    override public func deriveSubtitle() -> String? { self.inputCamera.value }
+
     // Ports
     override public class func registerPorts(context: Context) -> [(name: String, port: Port)] {
         let ports = super.registerPorts(context: context)
@@ -124,6 +127,8 @@ public class CameraProviderNode : Node
     override public func postInit()
     {
         super.postInit()
+
+        self.inputCamera.feedsSubtitle()
 
         self.wasConnectedObserver = NotificationCenter.default.addObserver(forName: AVCaptureDevice.wasConnectedNotification, object: nil, queue: .main)
         { [weak self] notification in

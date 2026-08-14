@@ -190,6 +190,12 @@ public class OSCReceiveNode: Node
     override public class var nodeTimeMode: Node.TimeMode { .None }
     override public class var nodeDescription: String { "Receive OSC messages and output values" }
 
+    /// The bound OSC addresses.
+    override public func deriveSubtitle() -> String?
+    {
+        addressBindings.map(\.address).joined(separator: ", ")
+    }
+
     // MARK: - Codable
 
     private enum OSCReceiveCodingKeys: String, CodingKey
@@ -256,6 +262,8 @@ public class OSCReceiveNode: Node
         {
             self.rebuildPorts()
             _settingsModelStorage?.addressBindings = addressBindings
+            // `subtitle` is derived from the bindings; notify so the title refreshes.
+            self.subtitleSubject.send()
         }
     }
 

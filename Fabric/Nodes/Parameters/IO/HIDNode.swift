@@ -540,6 +540,18 @@ public class HIDNode: Node
     override public class var nodeTimeMode: Node.TimeMode { .None }
     override public class var nodeDescription: String { "Read input from HID devices (gamepads, joysticks, etc.)" }
 
+    // Dynamic node name based on selected device. Falls back to the serialized
+    // device info so the title is right before the device (re)connects.
+    override public func deriveSubtitle() -> String?
+    {
+        if let deviceID = selectedDeviceID,
+           let device = availableDevices.first(where: { $0.id == deviceID })
+        {
+            return device.displayName
+        }
+        return savedDeviceInfo?.displayName
+    }
+
     // MARK: - Codable
 
     private enum HIDCodingKeys: String, CodingKey
@@ -613,6 +625,8 @@ public class HIDNode: Node
 
             _settingsModelStorage?.selectedDeviceID = selectedDeviceID
             _settingsModelStorage?.deviceElements = deviceElements
+            // `subtitle` is derived from the selected device; notify so the title refreshes.
+            self.subtitleSubject.send()
         }
     }
 
