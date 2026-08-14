@@ -75,7 +75,7 @@ class BaseEffectThreeChannelNode: Node, NodeFileLoadingProtocol
     
     required init(context:Context)
     {
-        let bundle = Bundle(for: Self.self)
+        let bundle = Bundle.module
         let shaderURL = bundle.url(forResource: Self.sourceShaderName, withExtension: "metal", subdirectory: "Shaders")
         
         
@@ -146,7 +146,7 @@ class BaseEffectThreeChannelNode: Node, NodeFileLoadingProtocol
             }
             else
             {
-                let bundle = Bundle(for: Self.self)
+                let bundle = Bundle.module
                 let shaderURL = bundle.url(forResource: Self.sourceShaderName, withExtension: "metal", subdirectory: "Shaders")
                 
                 let material = PostMaterial(pipelineURL:shaderURL!)
@@ -160,7 +160,7 @@ class BaseEffectThreeChannelNode: Node, NodeFileLoadingProtocol
         }
         else
         {
-            let bundle = Bundle(for: Self.self)
+            let bundle = Bundle.module
             let shaderURL = bundle.url(forResource: Self.sourceShaderName, withExtension: "metal", subdirectory: "Shaders")
             
             let material = PostMaterial(pipelineURL:shaderURL!)

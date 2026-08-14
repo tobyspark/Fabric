@@ -67,7 +67,7 @@ public final class ContourPathNode: Node {
 
     // MARK: - Setup
     private func setupProcessor(context: Context) {
-        let bundle = Bundle(for: Self.self)
+        let bundle = Bundle.module
         guard let url = bundle.url(forResource: "MarchingSquares", withExtension: "metal", subdirectory: "Compute")
 
         else {

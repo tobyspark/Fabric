@@ -158,7 +158,7 @@ public class BaseEffectNode: Node, NodeFileLoadingProtocol
             }
             else
             {
-                let bundle = Bundle(for: Self.self)
+                let bundle = Bundle.module
                 let shaderURL = bundle.url(forResource: Self.sourceShaderName, withExtension: "metal", subdirectory: "Shaders")
                 
                 let material = PostMaterial(pipelineURL:shaderURL!)

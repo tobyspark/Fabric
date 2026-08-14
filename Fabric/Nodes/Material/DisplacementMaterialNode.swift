@@ -58,7 +58,7 @@ public class DisplacementMaterialNode: BaseMaterialNode
    
     required public init(context: Context)
     {
-        let bundle = Bundle(for: Self.self)
+        let bundle = Bundle.module
         let shaderURL = bundle.url(forResource: "DisplacementMaterial", withExtension: "metal", subdirectory: "Materials")
         
         self._material = DisplacementMaterial(context:context, pipelineURL: shaderURL!)
@@ -70,7 +70,7 @@ public class DisplacementMaterialNode: BaseMaterialNode
     {
         guard let context = decoder.context?.documentContext as? Context else { fatalError("Invalid Context") }
         
-        let bundle = Bundle(for: Self.self)
+        let bundle = Bundle.module
         let shaderURL = bundle.url(forResource: "DisplacementMaterial", withExtension: "metal", subdirectory: "Materials")
         
         self._material = DisplacementMaterial(context:context, pipelineURL: shaderURL!)
