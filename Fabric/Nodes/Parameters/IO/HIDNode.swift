@@ -729,6 +729,8 @@ public class HIDNode: Node
     {
         availableDevices = hidManager?.getAvailableDevices() ?? []
         _settingsModelStorage?.availableDevices = availableDevices
+        // `subtitle` resolves against the device list; notify so the title refreshes.
+        self.subtitleSubject.send()
     }
 
     private func handleValueChange(deviceID: String, element: HIDElementInfo, value: Int)
