@@ -22,6 +22,15 @@ public class NumberRoundNode : Node
     override public class var nodeTimeMode: Node.TimeMode { .None }
     override public class var nodeDescription: String { "Round a Number to an Index"}
 
+    /// The selected rounding method.
+    override public func deriveSubtitle() -> String? { self.inputRoundMethod.value }
+
+    override public func postInit()
+    {
+        super.postInit()
+        self.inputRoundMethod.feedsSubtitle()
+    }
+
     // Ports
     override public class func registerPorts(context: Context) -> [(name: String, port: Port)] {
         let ports = super.registerPorts(context: context)
@@ -38,7 +47,7 @@ public class NumberRoundNode : Node
     public var inputNumber:ParameterPort<Float> { port(named: "inputNumber") }
     public var inputRoundMethod:ParameterPort<String> { port(named: "inputRoundMethod") }
     public var outputNumber:NodePort<Int> { port(named: "outputNumber") }
-    
+
     override public func execute(renderer:GraphRenderer,
                                  executionInfo:GraphExecutionInfo,
                                  renderPassDescriptor: MTLRenderPassDescriptor,

@@ -14,6 +14,15 @@ public class StringComparisonNode: Node {
     override public class var nodeTimeMode: Node.TimeMode { .None }
     override public class var nodeDescription: String { "Compare two String values" }
 
+    /// The selected operator.
+    override public func deriveSubtitle() -> String? { self.inputOperator.value }
+
+    override public func postInit()
+    {
+        super.postInit()
+        self.inputOperator.feedsSubtitle()
+    }
+
     // Ports
     override public class func registerPorts(context: Context) -> [(name: String, port: Port)] {
         let ports = super.registerPorts(context: context)

@@ -17,6 +17,15 @@ public class BooleanLogicNode : Node
     override public class var nodeTimeMode: Node.TimeMode { .None }
     override public class var nodeDescription: String { "Compare two Boolean values"}
 
+    /// The selected operator.
+    override public func deriveSubtitle() -> String? { self.inputParam.value }
+
+    override public func postInit()
+    {
+        super.postInit()
+        self.inputParam.feedsSubtitle()
+    }
+
     // Ports
     override public class func registerPorts(context: Context) -> [(name: String, port: Port)] {
         let ports = super.registerPorts(context: context)
@@ -37,7 +46,7 @@ public class BooleanLogicNode : Node
     public var outputBool:NodePort<Bool> { port(named: "outputBool") }
     
     private var op = LogicOperator.Equals
-    
+
     override public func startExecution(renderer:GraphRenderer) throws
     {
         try super.startExecution(renderer: renderer)

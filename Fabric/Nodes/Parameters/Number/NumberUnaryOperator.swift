@@ -21,6 +21,15 @@ public class NumberUnaryOperator : Node
     override public class var nodeTimeMode: Node.TimeMode { .None }
     override public class var nodeDescription: String { "Run an operation on an input Number and return the resulting Number"}
 
+    /// The selected operator.
+    override public func deriveSubtitle() -> String? { self.inputParam.value }
+
+    override public func postInit()
+    {
+        super.postInit()
+        self.inputParam.feedsSubtitle()
+    }
+
     // Ports
     override public class func registerPorts(context: Context) -> [(name: String, port: Port)] {
         let ports = super.registerPorts(context: context)
@@ -39,7 +48,7 @@ public class NumberUnaryOperator : Node
     public var outputNumber:NodePort<Float> { port(named: "outputNumber") }
         
     private var mathOperator = UnaryMathOperator.Sine
-    
+
     override public func execute(renderer:GraphRenderer,
                                  executionInfo:GraphExecutionInfo,
                                  renderPassDescriptor: MTLRenderPassDescriptor,

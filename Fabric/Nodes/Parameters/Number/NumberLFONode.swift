@@ -38,6 +38,15 @@ public class NumberLFONode : Node
     override public class var nodeTimeMode: Node.TimeMode { .TimeBase }
     override public class var nodeDescription: String { "Low-frequency oscillator. Outputs a value in [0, 1] that cycles through the selected Waveform once every Period seconds. Phase is accumulated per frame, so changing Period live shifts the rate without jumping the output. Phase offsets the position within the cycle, letting several LFOs run in sync but staggered." }
 
+    /// The selected waveform.
+    override public func deriveSubtitle() -> String? { self.inputWaveform.value }
+
+    override public func postInit()
+    {
+        super.postInit()
+        self.inputWaveform.feedsSubtitle()
+    }
+
     // Accumulated phase in [0, 1). Advanced each frame by deltaTime / period so
     // live Period changes stay continuous (unlike time / period, which jumps).
     private var phase: Float = 0

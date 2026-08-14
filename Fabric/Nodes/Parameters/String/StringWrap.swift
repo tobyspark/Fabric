@@ -14,6 +14,15 @@ public class StringWrapNode: Node {
     override public class var nodeTimeMode: Node.TimeMode { .None }
     override public class var nodeDescription: String { "Wrap a String by inserting newlines at word boundaries" }
 
+    /// The selected wrap mode.
+    override public func deriveSubtitle() -> String? { self.inputMode.value }
+
+    override public func postInit()
+    {
+        super.postInit()
+        self.inputMode.feedsSubtitle()
+    }
+
     // Ports
     override public class func registerPorts(context: Context) -> [(name: String, port: Port)] {
         let ports = super.registerPorts(context: context)

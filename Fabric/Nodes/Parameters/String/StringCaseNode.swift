@@ -14,6 +14,15 @@ public class StringCaseNode: Node {
     override public class var nodeTimeMode: Node.TimeMode { .None }
     override public class var nodeDescription: String { "Convert the case of a String" }
 
+    /// The selected case conversion.
+    override public func deriveSubtitle() -> String? { self.inputCase.value }
+
+    override public func postInit()
+    {
+        super.postInit()
+        self.inputCase.feedsSubtitle()
+    }
+
     // Ports
     override public class func registerPorts(context: Context) -> [(name: String, port: Port)] {
         let ports = super.registerPorts(context: context)

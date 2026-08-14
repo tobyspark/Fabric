@@ -18,9 +18,16 @@ public class BlendNode: BaseImageNode
     override public class var nodeTimeMode: Node.TimeMode { .None }
     override public class var nodeDescription: String { "Blend two images using a selectable blend mode" }
 
-    /// BaseImageNode derives a name from its shader file; Blend is always "Blend"
-    /// (unless the user renames it, which `userName` handles in the base class).
-    override public func deriveSubtitle() -> String? { nil }
+    /// The selected blend mode. Title refresh fires from the Mode port's value
+    /// change, not from `execute`'s shader swap: execution is pull-based, so an
+    /// un-pulled node would otherwise keep a stale title.
+    override public func deriveSubtitle() -> String? { self.inputMode.value }
+
+    override public func postInit()
+    {
+        super.postInit()
+        self.inputMode.feedsSubtitle()
+    }
 
     override public class var defaultImageInputCountHint: Int? { 2 }
 

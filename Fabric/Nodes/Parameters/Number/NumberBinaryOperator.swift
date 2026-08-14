@@ -18,6 +18,15 @@ public class NumberBinaryOperator : Node
     override public class var nodeTimeMode: Node.TimeMode { .None }
     override public class var nodeDescription: String { "Run an operation on 2 inputs Number and return the resulting Number"}
 
+    /// The selected operator.
+    override public func deriveSubtitle() -> String? { self.inputParam.value }
+
+    override public func postInit()
+    {
+        super.postInit()
+        self.inputParam.feedsSubtitle()
+    }
+
     // Ports
     override public class func registerPorts(context: Context) -> [(name: String, port: Port)] {
         let ports = super.registerPorts(context: context)
@@ -38,7 +47,7 @@ public class NumberBinaryOperator : Node
     public var outputNumber:NodePort<Float> { port(named: "outputNumber") }
     
     private var mathOperator = BinaryMathOperator.Add
-    
+
     override public func startExecution(renderer:GraphRenderer) throws
     {
         try super.startExecution(renderer: renderer)
