@@ -17,18 +17,6 @@ public final class MotionBlurNode: BaseMultiPassBlurEffectNode {
 
     private var passUniformsBuffers: [StructBuffer<MotionPassUniforms>] = []
 
-    required init(context: Context, fileURL: URL) throws {
-        try super.init(context: context, fileURL: fileURL)
-    }
-
-    required init(context: Context) {
-        super.init(context: context)
-    }
-
-    required init(from decoder: any Decoder) throws {
-        try super.init(from: decoder)
-    }
-
     private func passUniformsBuffer(forStepIndex index: Int) -> StructBuffer<MotionPassUniforms> {
         while self.passUniformsBuffers.count <= index {
             let bufferLabel = "Motion Blur Pass Uniforms \(self.passUniformsBuffers.count)"

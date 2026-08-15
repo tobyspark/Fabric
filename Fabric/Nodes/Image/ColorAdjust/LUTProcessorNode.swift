@@ -41,27 +41,22 @@ public class LUTProcessorNode : BaseImageNode
     public required init(context:Context, fileURL:URL? = nil)
     {
         super.init(context: context)
-          
-        try? self.loadLUTFromInputValue()
     }
-    
+
     public required init(context:Context)
     {
         super.init(context: context)
-          
-        try? self.loadLUTFromInputValue()
     }
-    
+
     public required init(from decoder: any Decoder) throws
     {
-//        guard let decodeContext = decoder.context else
-//        {
-//            fatalError("Required Decode Context Not set")
-//        }
-        
         try super.init(from:decoder)
-        
-        try self.loadLUTFromInputValue()
+    }
+
+    override public func postInit()
+    {
+        super.postInit()
+        try? self.loadLUTFromInputValue()
     }
     
     override public func execute(renderer:GraphRenderer,
