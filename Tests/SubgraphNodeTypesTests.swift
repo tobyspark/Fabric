@@ -67,3 +67,29 @@ struct SubgraphNodeTypesTests
         }
     }
 }
+
+extension SubgraphNodeTypesTests
+{
+    @Test("Derived lists are built once per plugin change, not per read")
+    func derivedListsAreCachedUntilPluginsChange() throws
+    {
+        let registry = try NodeRegistry.shared
+
+        let first = registry.subgraphNodeTypes
+        let second = registry.subgraphNodeTypes
+        #expect(registry.derivedListGeneration == registry.derivedListGeneration)
+        #expect(first.map(\.id) == second.map(\.id))
+        let builtBefore = registry.derivedListBuildCount
+
+        _ = registry.subgraphNodeTypes
+        _ = registry.allSupportedDropTypes
+        _ = registry.allSupportedDropTypes
+        #expect(registry.derivedListBuildCount == builtBefore)
+
+        PluginLoader.shared.pluginsDidChange.send()
+        _ = registry.subgraphNodeTypes
+        #expect(registry.derivedListBuildCount == builtBefore + 1)
+        _ = registry.subgraphNodeTypes
+        #expect(registry.derivedListBuildCount == builtBefore + 1)
+    }
+}

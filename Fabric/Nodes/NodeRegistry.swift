@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import Combine
 import Satin
 import UniformTypeIdentifiers
 
@@ -26,6 +27,38 @@ public class NodeRegistry
     init() throws
     {
         try loadPluginsIfNeeded()
+
+        // The initial load's signal has fired by now; from here on each
+        // signal marks the derived lists stale, and the next read rebuilds.
+        pluginChangeSubscription = PluginLoader.shared.pluginsDidChange.sink { [weak self] in
+            guard let self else { return }
+            self.derivedListLock.withLock { self.derivedListGeneration += 1 }
+        }
+    }
+
+    private var pluginChangeSubscription: AnyCancellable?
+    private let derivedListLock = NSLock()
+
+    /// Bumped by the loader's change signal. The lists derived from the node
+    /// list rebuild once per generation, on the first read after the bump.
+    internal private(set) var derivedListGeneration = 0
+    internal private(set) var derivedListBuildCount = 0
+    private var builtGeneration = -1
+    private var cachedSubgraphNodeTypes: [SubgraphNodeType] = []
+    private var cachedDropTypes: [UTType] = []
+
+    private func rebuildDerivedListsIfStale()
+    {
+        derivedListLock.withLock {
+            guard builtGeneration != derivedListGeneration else { return }
+            cachedSubgraphNodeTypes = self.availableNodes.compactMap { wrapper in
+                guard let subgraphClass = wrapper.nodeClass as? SubgraphNode.Type else { return nil }
+                return SubgraphNodeType(wrapper: wrapper, subgraphClass: subgraphClass)
+            }
+            cachedDropTypes = self.nodeFileLoadingClasses.flatMap { $0.supportedContentTypes }
+            builtGeneration = derivedListGeneration
+            derivedListBuildCount += 1
+        }
     }
 
     public func nodeClass(pluginID: String, nodeID: String) -> (Node.Type)?
@@ -58,7 +91,8 @@ public class NodeRegistry
     /// All UTTypes accepted by drop-target nodes, for use with drop destination handlers.
     public var allSupportedDropTypes: [UTType]
     {
-        self.nodeFileLoadingClasses.flatMap { $0.supportedContentTypes }
+        rebuildDerivedListsIfStale()
+        return derivedListLock.withLock { cachedDropTypes }
     }
 
     /// Every registered node, read live from the plugin loader so a plugin
@@ -81,13 +115,11 @@ public class NodeRegistry
     }
 
     /// The one list of subgraph node types, in registration order: the core
-    /// kinds and any a plugin adds.
+    /// kinds and any a plugin adds. Built once per plugin change.
     public var subgraphNodeTypes: [SubgraphNodeType]
     {
-        self.availableNodes.compactMap { wrapper in
-            guard let subgraphClass = wrapper.nodeClass as? SubgraphNode.Type else { return nil }
-            return SubgraphNodeType(wrapper: wrapper, subgraphClass: subgraphClass)
-        }
+        rebuildDerivedListsIfStale()
+        return derivedListLock.withLock { cachedSubgraphNodeTypes }
     }
 
     public var pluginLoadErrors: [PluginLoadError]
