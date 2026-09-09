@@ -172,21 +172,20 @@ struct GraphNodesView: View
             }
 
             Menu("Embed Selection In...") {
-                let embedClasses = [SubgraphNode.self, IteratorNode.self, EnvironmentNode.self, DeferredSubgraphNode.self]
+                let subgraphTypes = (try? NodeRegistry.shared.subgraphNodeTypes) ?? []
 
-                ForEach(0 ..< embedClasses.count, id: \.self) { embedClassIndex in
-                    let embedClass = embedClasses[embedClassIndex]
+                ForEach(subgraphTypes) { subgraphType in
                     Button {
                         do {
                             _ = try currentGraph.createSubgraph(from: currentGraph.selectedNodes,
                                                                centeredOn: currentNode,
-                                                               usingClass: embedClass)
+                                                               usingClass: subgraphType.subgraphClass)
                         }
                         catch {
                             print("Create subgraph failed: \(error.localizedDescription)")
                         }
                     } label: {
-                        Text(embedClass.name)
+                        Text(subgraphType.name)
                     }
                 }
             }

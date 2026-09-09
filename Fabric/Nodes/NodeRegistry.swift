@@ -56,13 +56,39 @@ public class NodeRegistry
     }
 
     /// All UTTypes accepted by drop-target nodes, for use with drop destination handlers.
-    public lazy private(set) var allSupportedDropTypes: [UTType] = {
-        return self.nodeFileLoadingClasses.flatMap { $0.supportedContentTypes }
-    }()
+    public var allSupportedDropTypes: [UTType]
+    {
+        self.nodeFileLoadingClasses.flatMap { $0.supportedContentTypes }
+    }
 
-    public lazy private(set) var availableNodes: [NodeClassWrapper] = {
-        return PluginLoader.shared.pluginNodeWrappers
-    }()
+    /// Every registered node, read live from the plugin loader so a plugin
+    /// loaded after first access is included. PluginLoader.pluginsDidChange
+    /// says when to re-read.
+    public var availableNodes: [NodeClassWrapper]
+    {
+        PluginLoader.shared.pluginNodeWrappers
+    }
+
+    /// A registered node class that is a kind of subgraph, for choices such
+    /// as Embed Selection In.
+    public struct SubgraphNodeType: Identifiable
+    {
+        public let wrapper: NodeClassWrapper
+        public let subgraphClass: SubgraphNode.Type
+
+        public var id: UUID { wrapper.id }
+        public var name: String { wrapper.nodeName }
+    }
+
+    /// The one list of subgraph node types, in registration order: the core
+    /// kinds and any a plugin adds.
+    public var subgraphNodeTypes: [SubgraphNodeType]
+    {
+        self.availableNodes.compactMap { wrapper in
+            guard let subgraphClass = wrapper.nodeClass as? SubgraphNode.Type else { return nil }
+            return SubgraphNodeType(wrapper: wrapper, subgraphClass: subgraphClass)
+        }
+    }
 
     public var pluginLoadErrors: [PluginLoadError]
     {

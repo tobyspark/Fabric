@@ -8,10 +8,15 @@
 import Foundation
 import Satin
 import os
+import Combine
 
 /// Loads Fabric's embedded core plugin plus optional external node plugin bundles.
 public final class PluginLoader
 {
+    /// Fires after a plugin's node classes are registered, so anything built
+    /// from the node list (the library, subgraph type menus) can refresh.
+    public let pluginsDidChange = PassthroughSubject<Void, Never>()
+
     public static let shared = PluginLoader()
     public static let currentAPIVersion = 1
     public static let pluginExtension = "fabricplugin"
@@ -211,6 +216,7 @@ public final class PluginLoader
 
             pluginNodeWrappers.append(contentsOf: FabricCoreNodesPlugin.dynamicNodeWrappers())
             loadedPlugins[Self.coreNodesPluginID] = pluginInfo
+            pluginsDidChange.send()
             logger.info("Loaded embedded Fabric core nodes plugin")
         }
         catch let error as PluginLoadError
@@ -284,6 +290,7 @@ public final class PluginLoader
 
         loadedPlugins[pluginInfo.id] = pluginInfo
         logger.info("Loaded Fabric plugin '\(pluginInfo.displayName)' with \(nodeClasses.count) node class(es)")
+        pluginsDidChange.send()
     }
 
     public func nodeClass(pluginID: String, nodeID: String) -> Node.Type?
