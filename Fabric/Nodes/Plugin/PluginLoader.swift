@@ -8,26 +8,10 @@
 import Foundation
 import Satin
 import os
-import Combine
 
 /// Loads Fabric's embedded core plugin plus optional external node plugin bundles.
 public final class PluginLoader
 {
-    /// Fires after node classes are registered, so anything built from the
-    /// node list (the library, subgraph type menus) can refresh: once for the
-    /// whole initial load, after its lock is released, and once per plugin
-    /// loaded later. Subscribers run on the loading thread.
-    public let pluginsDidChange = PassthroughSubject<Void, Never>()
-
-    /// Set for the initial load so its plugins signal once, together, after
-    /// the lock is released rather than one at a time under it.
-    private var coalesceChangeSignal = false
-
-    private func notePluginsChanged()
-    {
-        if !coalesceChangeSignal { pluginsDidChange.send() }
-    }
-
     public static let shared = PluginLoader()
     public static let currentAPIVersion = 1
     public static let pluginExtension = "fabricplugin"
@@ -110,20 +94,11 @@ public final class PluginLoader
 
     public func loadAllPlugins() throws
     {
-        let loaded = try loadAllPluginsUnderLock()
-        if loaded { pluginsDidChange.send() }
-    }
-
-    private func loadAllPluginsUnderLock() throws -> Bool
-    {
         pluginLoadLock.lock()
         defer { pluginLoadLock.unlock() }
 
-        guard !pluginsLoaded else { return false }
+        guard !pluginsLoaded else { return }
         pluginsLoaded = true
-
-        coalesceChangeSignal = true
-        defer { coalesceChangeSignal = false }
 
         loadErrors.removeAll()
         do
@@ -136,7 +111,6 @@ public final class PluginLoader
             pluginsLoaded = false
             throw error
         }
-        return true
     }
 
     /// Loads every discovered plugin bundle.
@@ -237,7 +211,6 @@ public final class PluginLoader
 
             pluginNodeWrappers.append(contentsOf: FabricCoreNodesPlugin.dynamicNodeWrappers())
             loadedPlugins[Self.coreNodesPluginID] = pluginInfo
-            notePluginsChanged()
             logger.info("Loaded embedded Fabric core nodes plugin")
         }
         catch let error as PluginLoadError
@@ -311,7 +284,6 @@ public final class PluginLoader
 
         loadedPlugins[pluginInfo.id] = pluginInfo
         logger.info("Loaded Fabric plugin '\(pluginInfo.displayName)' with \(nodeClasses.count) node class(es)")
-        notePluginsChanged()
     }
 
     public func nodeClass(pluginID: String, nodeID: String) -> Node.Type?

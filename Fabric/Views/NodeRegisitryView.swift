@@ -153,9 +153,6 @@ public struct NodeRegisitryView: View {
         .searchable(text: $searchString, placement: .sidebar)
         .searchFocused(focus, equals: .registrySearch)
         .searchPresentationToolbarBehavior(.avoidHidingContent)
-        .onReceive(PluginLoader.shared.pluginsDidChange.receive(on: DispatchQueue.main)) { _ in
-            self.updateFilteredNodes()
-        }
         .onChange(of: self.searchString) { _, _ in
             self.updateFilteredNodes()
             

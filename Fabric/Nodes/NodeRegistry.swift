@@ -6,7 +6,6 @@
 //
 
 import Foundation
-import Combine
 import Satin
 import UniformTypeIdentifiers
 
@@ -27,38 +26,30 @@ public class NodeRegistry
     init() throws
     {
         try loadPluginsIfNeeded()
-
-        // The initial load's signal has fired by now; from here on each
-        // signal marks the derived lists stale, and the next read rebuilds.
-        pluginChangeSubscription = PluginLoader.shared.pluginsDidChange.sink { [weak self] in
-            guard let self else { return }
-            self.derivedListLock.withLock { self.derivedListGeneration += 1 }
-        }
+        rebuildNodeLists()
     }
 
-    private var pluginChangeSubscription: AnyCancellable?
-    private let derivedListLock = NSLock()
-
-    /// Bumped by the loader's change signal. The lists derived from the node
-    /// list rebuild once per generation, on the first read after the bump.
-    internal private(set) var derivedListGeneration = 0
-    internal private(set) var derivedListBuildCount = 0
-    private var builtGeneration = -1
-    private var cachedSubgraphNodeTypes: [SubgraphNodeType] = []
-    private var cachedDropTypes: [UTType] = []
-
-    private func rebuildDerivedListsIfStale()
+    /// Loads a plugin bundle after startup and rebuilds the node lists.
+    public func loadPlugin(at url: URL) throws
     {
-        derivedListLock.withLock {
-            guard builtGeneration != derivedListGeneration else { return }
-            cachedSubgraphNodeTypes = self.availableNodes.compactMap { wrapper in
-                guard let subgraphClass = wrapper.nodeClass as? SubgraphNode.Type else { return nil }
-                return SubgraphNodeType(wrapper: wrapper, subgraphClass: subgraphClass)
-            }
-            cachedDropTypes = self.nodeFileLoadingClasses.flatMap { $0.supportedContentTypes }
-            builtGeneration = derivedListGeneration
-            derivedListBuildCount += 1
+        pluginLoadLock.lock()
+        defer { pluginLoadLock.unlock() }
+
+        let loader = PluginLoader.shared
+        try loader.loadPlugin(at: url, existingNodeNames: Set(loader.pluginNodeWrappers.map(\.nodeName)))
+        rebuildNodeLists()
+    }
+
+    /// The node lists are fixed between plugin loads: computed once here,
+    /// read as plain arrays until the next load.
+    private func rebuildNodeLists()
+    {
+        availableNodes = PluginLoader.shared.pluginNodeWrappers
+        subgraphNodeTypes = availableNodes.compactMap { wrapper in
+            guard let subgraphClass = wrapper.nodeClass as? SubgraphNode.Type else { return nil }
+            return SubgraphNodeType(wrapper: wrapper, subgraphClass: subgraphClass)
         }
+        allSupportedDropTypes = nodeFileLoadingClasses.flatMap { $0.supportedContentTypes }
     }
 
     public func nodeClass(pluginID: String, nodeID: String) -> (Node.Type)?
@@ -89,19 +80,10 @@ public class NodeRegistry
     }
 
     /// All UTTypes accepted by drop-target nodes, for use with drop destination handlers.
-    public var allSupportedDropTypes: [UTType]
-    {
-        rebuildDerivedListsIfStale()
-        return derivedListLock.withLock { cachedDropTypes }
-    }
+    public private(set) var allSupportedDropTypes: [UTType] = []
 
-    /// Every registered node, read live from the plugin loader so a plugin
-    /// loaded after first access is included. PluginLoader.pluginsDidChange
-    /// says when to re-read.
-    public var availableNodes: [NodeClassWrapper]
-    {
-        PluginLoader.shared.pluginNodeWrappers
-    }
+    /// Every registered node.
+    public private(set) var availableNodes: [NodeClassWrapper] = []
 
     /// A registered node class that is a kind of subgraph, for choices such
     /// as Embed Selection In.
@@ -114,13 +96,9 @@ public class NodeRegistry
         public var name: String { wrapper.nodeName }
     }
 
-    /// The one list of subgraph node types, in registration order: the core
-    /// kinds and any a plugin adds. Built once per plugin change.
-    public var subgraphNodeTypes: [SubgraphNodeType]
-    {
-        rebuildDerivedListsIfStale()
-        return derivedListLock.withLock { cachedSubgraphNodeTypes }
-    }
+    /// The subgraph node types, in registration order: the core kinds and
+    /// any a plugin adds.
+    public private(set) var subgraphNodeTypes: [SubgraphNodeType] = []
 
     public var pluginLoadErrors: [PluginLoadError]
     {
