@@ -22,7 +22,7 @@ struct GraphNodesView: View
 
     @State private var initialOffsets: [UUID: CGSize] = [:]
     @State private var activeDragAnchor: UUID? = nil
-    @State private var renamingCloneSetNodeID: UUID? = nil
+    @State private var cloneSetRenameRequest: CloneSetRenameRequest? = nil
 
     var body: some View
     {
@@ -83,7 +83,7 @@ struct GraphNodesView: View
                 }
                 .modifier(CloneSetRenameAlertIfSubgraph(node: currentNode,
                                                         graph: currentGraph,
-                                                        renamingNodeID: $renamingCloneSetNodeID))
+                                                        renameRequest: $cloneSetRenameRequest))
         }
     }
 
@@ -224,7 +224,7 @@ struct GraphNodesView: View
         {
             CloneSetContextMenu(subgraphNode: subgraphNode,
                                 currentGraph: currentGraph,
-                                renamingNodeID: $renamingCloneSetNodeID)
+                                renameRequest: $cloneSetRenameRequest)
         }
     }
 
