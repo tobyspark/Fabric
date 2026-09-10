@@ -109,16 +109,15 @@ import Satin
     {
         guard let context = makeContext() else { return }
         let node = MathExpressionParametricGeometryNode(context: context)
-        #expect(node.titleIcon == nil)
+        #expect(node.status == nil)
 
         node.expressionY = "sin("
-        let icon = try #require(node.titleIcon)
-        #expect(icon.tint == .error)
-        #expect(icon.tooltip.contains("Y"))
-        #expect(icon.tooltip.contains("X") == false)
+        guard case .error(let message)? = node.status else { Issue.record("expected an error status"); return }
+        #expect(message.contains("Y"))
+        #expect(message.contains("X") == false)
         #expect(node.subtitle?.contains("⚠") == false)
 
         node.expressionY = "sin(v)"
-        #expect(node.titleIcon == nil)
+        #expect(node.status == nil)
     }
 }

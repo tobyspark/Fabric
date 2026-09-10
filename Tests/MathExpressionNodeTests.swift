@@ -83,18 +83,17 @@ import MathExpressionEngine
     {
         guard let context = makeContext() else { return }
         let node = MathExpressionNode(context: context)
-        #expect(node.titleIcon == nil)
+        #expect(node.status == nil)
 
         node.stringExpression = "sin("
         #expect(names(node.inputPorts()) == ["x", "y"]) // unchanged
         let diagnostic = try #require(node._settingsModel.diagnostics.first { $0.severity == .error })
-        let icon = try #require(node.titleIcon)
-        #expect(icon.tint == .error)
-        #expect(icon.tooltip.contains(diagnostic.message))
+        guard case .error(let message)? = node.status else { Issue.record("expected an error status"); return }
+        #expect(message.contains(diagnostic.message))
         #expect(node.subtitle?.contains("⚠") == false)
 
         node.stringExpression = "sin(x)"
-        #expect(node.titleIcon == nil)
+        #expect(node.status == nil)
     }
 
     /// Torture-tests for the node-title heuristic, drawn from the language spec:
@@ -185,7 +184,7 @@ import MathExpressionEngine
         node.stringExpression = "in x: floot"
         #expect(node.subtitle == nil)
         #expect(node.title == MathExpressionNode.name)
-        #expect(node.titleIcon?.tint == .error)
+        guard case .error? = node.status else { Issue.record("expected an error status"); return }
     }
 
     @Test func retypeReplacesPortWithNewType() throws

@@ -14,7 +14,7 @@ private final class NamingTestNode: Node
 
     private var nodeDerivedSubtitle: String?
     private var nodeDerivedTitle: String?
-    private var nodeDerivedTitleIcon: NodeTitleIcon?
+    private var nodeDerivedStatuses: [NodeStatus] = []
 
     override func deriveTitle() -> String
     {
@@ -38,14 +38,14 @@ private final class NamingTestNode: Node
         subtitleSubject.send()
     }
 
-    override func deriveTitleIcon() -> NodeTitleIcon?
+    override func deriveStatuses() -> [NodeStatus]
     {
-        nodeDerivedTitleIcon
+        nodeDerivedStatuses
     }
 
-    func setDerivedTitleIcon(_ icon: NodeTitleIcon?)
+    func setDerivedStatuses(_ statuses: [NodeStatus])
     {
-        nodeDerivedTitleIcon = icon
+        nodeDerivedStatuses = statuses
         subtitleSubject.send()
     }
 }
@@ -245,44 +245,54 @@ private final class NamingTestNode: Node
         #expect(nodeViewModel.title == "Updated Instance Title")
     }
 
-    @Test("Title icon is nil unless the node derives one")
-    func titleIconDefaultsToNil() throws
+    @Test("Status is nil unless the node derives one, and the most severe of several wins")
+    func statusIsTheMostSevereDerived() throws
     {
         guard let context = makeContext() else { return }
         let node = NamingTestNode(context: context)
-        #expect(node.titleIcon == nil)
+        #expect(node.status == nil)
 
-        let icon = NodeTitleIcon(systemName: "exclamationmark.triangle.fill", tooltip: "Needs attention", tint: .warning)
-        node.setDerivedTitleIcon(icon)
-        #expect(node.titleIcon == icon)
+        node.setDerivedStatuses([.warning("Needs attention")])
+        #expect(node.status == .warning("Needs attention"))
 
-        node.setDerivedTitleIcon(nil)
-        #expect(node.titleIcon == nil)
+        // Order is the status type's: error outranks warning whatever the order reported.
+        node.setDerivedStatuses([.warning("Needs attention"), .error("Broken")])
+        #expect(node.status == .error("Broken"))
+        node.setDerivedStatuses([.error("Broken"), .warning("Needs attention")])
+        #expect(node.status == .error("Broken"))
+        #expect(NodeStatus.error("a") > NodeStatus.warning("b"))
+        #expect(node.status?.message == "Broken")
+        // All of them, most severe first, for the tooltip, each naming its kind.
+        node.setDerivedStatuses([.warning("Needs attention"), .error("Broken")])
+        #expect(node.statuses == [.error("Broken"), .warning("Needs attention")])
+        #expect(node.statuses.map(\.description) == ["Error: Broken", "Warning: Needs attention"])
+
+        node.setDerivedStatuses([])
+        #expect(node.status == nil)
     }
 
-    @Test("NodeViewModel mirrors title icon changes")
-    func viewModelMirrorsTitleIcon() async throws
+    @Test("NodeViewModel mirrors status changes")
+    func viewModelMirrorsStatus() async throws
     {
         guard let context = makeContext() else { return }
         let node = NamingTestNode(context: context)
-        let initial = NodeTitleIcon(systemName: "square.on.square", tooltip: "Initial")
-        node.setDerivedTitleIcon(initial)
+        node.setDerivedStatuses([.warning("Initial")])
         let nodeViewModel = NodeViewModel(node: node)
-        #expect(nodeViewModel.titleIcon == initial)
+        #expect(nodeViewModel.status == .warning("Initial"))
 
-        let updated = NodeTitleIcon(systemName: "xmark.octagon.fill", tooltip: "Broken", tint: .error)
-        node.setDerivedTitleIcon(updated)
-        for _ in 0..<50 where nodeViewModel.titleIcon != updated
+        node.setDerivedStatuses([.warning("Initial"), .error("Broken")])
+        for _ in 0..<50 where nodeViewModel.status != .error("Broken")
         {
             try await Task.sleep(for: .milliseconds(10))
         }
-        #expect(nodeViewModel.titleIcon == updated)
+        #expect(nodeViewModel.status == .error("Broken"))
+        #expect(nodeViewModel.statuses == [.error("Broken"), .warning("Initial")])
 
-        node.setDerivedTitleIcon(nil)
-        for _ in 0..<50 where nodeViewModel.titleIcon != nil
+        node.setDerivedStatuses([])
+        for _ in 0..<50 where nodeViewModel.status != nil
         {
             try await Task.sleep(for: .milliseconds(10))
         }
-        #expect(nodeViewModel.titleIcon == nil)
+        #expect(nodeViewModel.status == nil)
     }
 }

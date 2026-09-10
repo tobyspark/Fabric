@@ -78,12 +78,17 @@ open class Node : Codable, Equatable, Identifiable, Hashable, Copyable, CustomDe
     // allowed here and reads as absence. Read `subtitle`, never this.
     open func deriveSubtitle() -> String? { nil }
 
-    // The glyph at the trailing edge of the title row, with its tooltip:
-    // Math Expression's parse error, for one. Override where the node has
-    // something to flag; nil for none. Read `titleIcon`, never this.
-    open func deriveTitleIcon() -> NodeTitleIcon? { nil }
+    // What the node has to tell the person looking at it: Math Expression's
+    // parse error, for one. Override where the node has something to report,
+    // in any order; empty for nothing. Read `statuses` or `status`, never this.
+    open func deriveStatuses() -> [NodeStatus] { [] }
 
-    final public var titleIcon: NodeTitleIcon? { self.deriveTitleIcon() }
+    // The node's statuses, most severe first. The title row shows the first
+    // one's glyph and lists them all on hover.
+    final public var statuses: [NodeStatus] { self.deriveStatuses().sorted(by: >) }
+
+    // The most severe of the node's statuses; nil for none.
+    final public var status: NodeStatus? { self.statuses.first }
 
     // User-supplied rename. Wins over the node-derived subtitle. Empty is
     // absence: a cleared rename must reveal the derived subtitle again.
@@ -178,7 +183,7 @@ open class Node : Codable, Equatable, Identifiable, Hashable, Copyable, CustomDe
     /// Fires whenever the port list changes (addDynamicPort / removePort).
     internal let portsChangedSubject = PassthroughSubject<Void, Never>()
 
-    /// Fires whenever state feeding `title`, `subtitle` or `titleIcon` changes.
+    /// Fires whenever state feeding `title`, `subtitle` or `status` changes.
     /// NodeViewModel subscribes and refreshes its observable title row mirrors.
     internal let subtitleSubject = PassthroughSubject<Void, Never>()
 

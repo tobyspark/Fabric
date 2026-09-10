@@ -75,17 +75,15 @@ public class MathExpressionParametricGeometryNode: BaseGeometryNode
         return axes.joined(separator: ", ").replacingOccurrences(of: "\n", with: " ")
     }
 
-    /// An axis that fails to compile is flagged at the title's trailing edge,
-    /// naming the failing axes in the tooltip.
-    override public func deriveTitleIcon() -> NodeTitleIcon? {
+    /// An axis that fails to compile is the node's status, naming the failing
+    /// axes in the message.
+    override public func deriveStatuses() -> [NodeStatus] {
         let failing = zip(["X", "Y", "Z"], [evalX, evalY, evalZ])
             .filter { $0.1 == nil }
             .map(\.0)
-        guard !failing.isEmpty else { return nil }
+        guard !failing.isEmpty else { return [] }
         let axes = failing.joined(separator: ", ")
-        return NodeTitleIcon(systemName: "xmark.octagon.fill",
-                             tooltip: "\(axes) expression\(failing.count == 1 ? " does" : "s do") not compile.",
-                             tint: .error)
+        return [.error("\(axes) expression\(failing.count == 1 ? " does" : "s do") not compile.")]
     }
 
     // MARK: - Settings Model

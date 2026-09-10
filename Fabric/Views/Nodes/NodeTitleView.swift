@@ -19,12 +19,12 @@ struct NodeTitleView: View
     /// with the port labels below it.
     private let leadingInset: CGFloat = 20
 
-    /// The row's inset from the node's top edge, and the icon cell's inset
-    /// from the trailing edge: one number, so the icon is centred the same
+    /// The row's inset from the node's top edge, and the status cell's inset
+    /// from the trailing edge: one number, so the glyph is centred the same
     /// distance from both edges.
     private let rowInset: CGFloat = 5
 
-    /// The row's height, and the icon cell's side.
+    /// The row's height, and the status cell's side.
     private let rowHeight: CGFloat = 20
 
     /// NodeView lays the port columns out one inlet radius wider than the
@@ -34,22 +34,22 @@ struct NodeTitleView: View
     /// that much wider so its trailing edge lands on the node's real edge.
     private let portOverhangShift: CGFloat = NodeInletView.radius / 2
 
-    private var titleIcon: NodeTitleIcon? { nodeViewModel.titleIcon }
+    private var statuses: [NodeStatus] { nodeViewModel.statuses }
 
     /// The row's full width, from the column's leading edge to the node's
     /// real trailing edge.
     private var rowWidth: CGFloat { nodeViewModel.nodeSize.width + portOverhangShift }
 
     /// The width the title text may occupy: the row less the leading inset
-    /// and, when there is an icon, its cell and inset.
+    /// and, when there is a status, its cell and inset.
     private var textWidth: CGFloat
     {
-        max(rowWidth - leadingInset - (titleIcon == nil ? 0 : rowHeight + rowInset), 1)
+        max(rowWidth - leadingInset - (statuses.isEmpty ? 0 : rowHeight + rowInset), 1)
     }
 
     /// Opaque across the title, fading to clear over the last ~1 character so an
     /// over-long title dissolves at the text area's right edge rather than
-    /// hard-clipping, before the icon where there is one.
+    /// hard-clipping, before the status glyph where there is one.
     private var titleEdgeFade: LinearGradient
     {
         let width = textWidth
@@ -82,17 +82,18 @@ struct NodeTitleView: View
             .frame(width: textWidth, height: rowHeight, alignment: .leading)
             .clipped()
             .mask(titleEdgeFade)
-            // The icon is placed against the row's trailing edge, independent
-            // of the text: the text only leaves it room via textWidth. It is
-            // centred in a square cell the row's height, inset from the edge
-            // by the row's own top inset, so its distance from the trailing
-            // edge matches its distance from the top.
+            // The status glyph is placed against the row's trailing edge,
+            // independent of the text: the text only leaves it room via
+            // textWidth. It is centred in a square cell the row's height,
+            // inset from the edge by the row's own top inset, so its distance
+            // from the trailing edge matches its distance from the top. The
+            // cell carries the tooltip, so a node with no status carries none.
             .frame(maxWidth: .infinity, alignment: .leading)
             .overlay(alignment: .trailing)
             {
-                if let titleIcon
+                if let mostSevere = statuses.first
                 {
-                    NodeTitleIconView(icon: titleIcon, cellSide: rowHeight)
+                    NodeStatusIconView(mostSevere: mostSevere, all: statuses, cellSide: rowHeight)
                         .padding(.trailing, rowInset)
                 }
             }
@@ -100,7 +101,6 @@ struct NodeTitleView: View
         .padding(.leading, leadingInset)
         .frame(width: rowWidth, alignment: .leading)
         .contentShape(Rectangle())
-        .help(titleIcon?.tooltip ?? "")
         .onTapGesture(count: 2)
         {
             if !renaming { renaming = true }
@@ -218,29 +218,46 @@ private struct NodeTitleText: View
     }
 }
 
-/// A title icon in its square cell, coloured by its tint.
-private struct NodeTitleIconView: View
+/// How a status looks: the glyph and colour of the most severe, in its
+/// square cell, with every status's message on hover, most severe first.
+/// The node reports the meaning; this is where it becomes an icon.
+private struct NodeStatusIconView: View
 {
-    let icon: NodeTitleIcon
+    let mostSevere: NodeStatus
+    let all: [NodeStatus]
     let cellSide: CGFloat
+
+    private var systemName: String
+    {
+        switch mostSevere
+        {
+        case .error:   "xmark.octagon.fill"
+        case .warning: "exclamationmark.triangle.fill"
+        }
+    }
 
     private var color: Color
     {
-        switch icon.tint
+        switch mostSevere
         {
-        case .neutral: .white
-        case .warning: .yellow
         case .error:   .red
+        case .warning: .yellow
         }
+    }
+
+    private var tooltip: String
+    {
+        all.map(\.description).joined(separator: "\n")
     }
 
     var body: some View
     {
-        Image(systemName: icon.systemName)
+        Image(systemName: systemName)
             .font(.system(size: 9))
             .bold()
             .foregroundStyle(color)
             .frame(width: cellSide, height: cellSide)
-            .accessibilityLabel(icon.tooltip)
+            .help(tooltip)
+            .accessibilityLabel(tooltip)
     }
 }

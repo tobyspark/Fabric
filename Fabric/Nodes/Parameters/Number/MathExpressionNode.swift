@@ -193,10 +193,9 @@ public class MathExpressionNode: Node
     override public func deriveSubtitle() -> String? { evaluatedSubtitle }
     private var evaluatedSubtitle: String = ""
 
-    /// A compile error is flagged at the title's trailing edge, with the
-    /// diagnostics as the tooltip.
-    override public func deriveTitleIcon() -> NodeTitleIcon? { errorTitleIcon }
-    private var errorTitleIcon: NodeTitleIcon?
+    /// A compile error is the node's status, with the diagnostics as the message.
+    override public func deriveStatuses() -> [NodeStatus] { compileErrorStatus.map { [$0] } ?? [] }
+    private var compileErrorStatus: NodeStatus?
 
     /// Extracts the salient part of a (possibly multi-statement) expression for
     /// use as the node title. A leading `//` comment is taken verbatim as an
@@ -424,11 +423,9 @@ public class MathExpressionNode: Node
         self.evaluatedSubtitle = Self.salientTitle(from: self.stringExpression)
 
         let errors = result.diagnostics.filter { $0.severity == .error }
-        self.errorTitleIcon = errors.isEmpty
+        self.compileErrorStatus = errors.isEmpty
             ? nil
-            : NodeTitleIcon(systemName: "xmark.octagon.fill",
-                            tooltip: errors.map(\.message).joined(separator: "\n"),
-                            tint: .error)
+            : .error(errors.map(\.message).joined(separator: "\n"))
 
         // Keep the settings model mirroring the node, not just model → node.
         // Its didSet guards on equality, so this cannot loop.
