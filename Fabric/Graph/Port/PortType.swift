@@ -24,7 +24,7 @@ public indirect enum PortType : RawRepresentable, Codable, Equatable, CaseIterab
     case Vector3
     case Vector4
     case Color
-    case Quaternion //(simd quatf)
+    case Orientation // A rotation as a quaternion (X, Y, Z, W), carried as simd_float4 like Color
     case Transform // (simd_float4x4)
     case Geometry
     case Material
@@ -48,7 +48,7 @@ public indirect enum PortType : RawRepresentable, Codable, Equatable, CaseIterab
         .Vector3,
         .Vector4,
         .Color,
-        .Quaternion,
+        .Orientation,
         .Transform,
         
         // 
@@ -70,7 +70,7 @@ public indirect enum PortType : RawRepresentable, Codable, Equatable, CaseIterab
 //        .Array(portType:.Vector3),
 //        .Array(portType:.Vector4),
 //        .Array(portType:.Color),
-//        .Array(portType:.Quaternion),
+//        .Array(portType:.Orientation),
 //        .Array(portType:.Transform),
 //        .Array(portType:.Geometry),
 //        .Array(portType:.Material),
@@ -89,7 +89,7 @@ public indirect enum PortType : RawRepresentable, Codable, Equatable, CaseIterab
 //        .Dictionary(valueType:.Vector3),
 //        .Dictionary(valueType:.Vector4),
 //        .Dictionary(valueType:.Color),
-//        .Dictionary(valueType:.Quaternion),
+//        .Dictionary(valueType:.Orientation),
 //        .Dictionary(valueType:.Transform),
 //        .Dictionary(valueType:.Geometry),
 //        .Dictionary(valueType:.Material),
@@ -112,7 +112,7 @@ public indirect enum PortType : RawRepresentable, Codable, Equatable, CaseIterab
         .Vector3,
         .Vector4,
         .Color,
-        .Quaternion,
+        .Orientation,
         .Transform,
         .String,
         .Geometry,
@@ -135,7 +135,9 @@ public indirect enum PortType : RawRepresentable, Codable, Equatable, CaseIterab
         case "Vector 3":      self = .Vector3;   return
         case "Vector 4":      self = .Vector4;   return
         case "Color":         self = .Color;     return
-        case "Quaternion":    self = .Quaternion; return
+        case "Orientation":   self = .Orientation; return
+        // Saved before Orientation replaced the simd_quatf-backed Quaternion type.
+        case "Quaternion":    self = .Orientation; return
         case "Transform":     self = .Transform; return
         case "Geometry":      self = .Geometry;  return
         case "Material":      self = .Material;  return
@@ -193,6 +195,14 @@ public indirect enum PortType : RawRepresentable, Codable, Equatable, CaseIterab
 //        fatalError("unsupported port type")
     }
     
+    /// The `rawValue` a port type saved as `savedRawValue` is written as now,
+    /// e.g. "Array of Quaternion" becomes "Array of Orientation". Unchanged when
+    /// it names no port type.
+    public static func currentRawValue(forSaved savedRawValue: String) -> String
+    {
+        PortType(rawValue: savedRawValue)?.rawValue ?? savedRawValue
+    }
+
     public var type:Any.Type  {
         switch self {
         case .Bool:
@@ -211,8 +221,8 @@ public indirect enum PortType : RawRepresentable, Codable, Equatable, CaseIterab
             return simd.simd_float4.self
         case .Color:
             return simd.simd_float4.self // could this backire?
-        case .Quaternion:
-            return simd.simd_quatf.self
+        case .Orientation:
+            return simd.simd_float4.self
         case .Transform:
             return simd.simd_float4x4.self
         case .Geometry:
@@ -252,8 +262,8 @@ public indirect enum PortType : RawRepresentable, Codable, Equatable, CaseIterab
             return "Vector 4"
         case .Color:
             return "Color" // could this backire?
-        case .Quaternion:
-            return "Quaternion"
+        case .Orientation:
+            return "Orientation"
         case .Transform:
             return "Transform"
         case .Geometry:
@@ -377,9 +387,6 @@ extension PortType {
             Self.appendLine(firstLinePrefix + Swift.String(describing: value), into: &lines, remainingLineCount: &remainingLineCount, capLineLength: capLineLength)
 
         case .Vector4(let value):
-            Self.appendLine(firstLinePrefix + Swift.String(describing: value), into: &lines, remainingLineCount: &remainingLineCount, capLineLength: capLineLength)
-
-        case .Quaternion(let value):
             Self.appendLine(firstLinePrefix + Swift.String(describing: value), into: &lines, remainingLineCount: &remainingLineCount, capLineLength: capLineLength)
 
         case .Geometry(let value):
@@ -514,7 +521,7 @@ extension PortType {
         case .Vector3:      return PassThroughNode<simd_float3>.self
         case .Vector4:      return PassThroughNode<simd_float4>.self
         case .Color:        return ColorPassThroughNode.self
-        case .Quaternion:   return PassThroughNode<simd_quatf>.self
+        case .Orientation:  return OrientationPassThroughNode.self
         case .Transform:    return PassThroughNode<simd_float4x4>.self
         case .Geometry:     return PassThroughNode<Geometry>.self
         case .Material:     return PassThroughNode<Material>.self
@@ -543,9 +550,8 @@ extension PortType {
         case .String:    return PassThroughNode<ContiguousArray<String>>.self
         case .Vector2:   return PassThroughNode<ContiguousArray<simd_float2>>.self
         case .Vector3:   return PassThroughNode<ContiguousArray<simd_float3>>.self
-        case .Vector4, .Color:
+        case .Vector4, .Color, .Orientation:
                          return PassThroughNode<ContiguousArray<simd_float4>>.self
-        case .Quaternion: return PassThroughNode<ContiguousArray<simd_quatf>>.self
         case .Transform: return PassThroughNode<ContiguousArray<simd_float4x4>>.self
         case .Geometry:  return PassThroughNode<ContiguousArray<Geometry>>.self
         case .Material:  return PassThroughNode<ContiguousArray<Material>>.self
@@ -564,9 +570,8 @@ extension PortType {
         case .String:    return PassThroughNode<Dictionary<String, String>>.self
         case .Vector2:   return PassThroughNode<Dictionary<String, simd_float2>>.self
         case .Vector3:   return PassThroughNode<Dictionary<String, simd_float3>>.self
-        case .Vector4, .Color:
+        case .Vector4, .Color, .Orientation:
                          return PassThroughNode<Dictionary<String, simd_float4>>.self
-        case .Quaternion: return PassThroughNode<Dictionary<String, simd_quatf>>.self
         case .Transform: return PassThroughNode<Dictionary<String, simd_float4x4>>.self
         case .Geometry:  return PassThroughNode<Dictionary<String, Geometry>>.self
         case .Material:  return PassThroughNode<Dictionary<String, Material>>.self

@@ -131,7 +131,7 @@ enum JavaScriptNodeSourceParser
         "Vector3": .Vector3,
         "Vector4": .Vector4,
         "Color": .Color,
-        "Quaternion": .Quaternion,
+        "Orientation": .Orientation,
         "Transform": .Transform,
         "Geometry": .Geometry,
         "Material": .Material,
@@ -139,6 +139,12 @@ enum JavaScriptNodeSourceParser
         // Only meaningful as a dictionary's value: a dictionary that takes any
         // of the above.
         "Value": .Virtual,
+    ]
+
+    /// Names a type went by before, still read so older scripts go on working,
+    /// but never written or offered.
+    static let formerScalarTypeLookup: [String: PortType] = [
+        "Quaternion": .Orientation,
     ]
 
     /// The annotated form's type names, kept so scripts written against it go on
@@ -154,7 +160,8 @@ enum JavaScriptNodeSourceParser
             "vector3": .Vector3,
             "vector4": .Vector4,
             "color": .Color,
-            "quaternion": .Quaternion,
+            "orientation": .Orientation,
+            "quaternion": .Orientation,
             "transform": .Transform,
             "geometry": .Geometry,
             "material": .Material,
@@ -193,7 +200,7 @@ enum JavaScriptNodeSourceParser
             return .Dictionary(valueType: value)
         }
 
-        return scalarTypeLookup[trimmed]
+        return scalarTypeLookup[trimmed] ?? formerScalarTypeLookup[trimmed]
     }
 
     /// A `Value` anywhere in a type: bare, an array's element, or a

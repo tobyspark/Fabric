@@ -38,9 +38,9 @@ enum NumericValueOperations
         case .Color:
             guard case .Vector4(let av) = a, case .Vector4(let bv) = b else { return nil }
             return .Vector4(interpolateColor(av, bv, t: t))
-        case .Quaternion:
-            guard case .Quaternion(let av) = a, case .Quaternion(let bv) = b else { return nil }
-            return .Quaternion(.lerp(av.normalized, bv.normalized, t))
+        case .Orientation:
+            guard case .Vector4(let av) = a, case .Vector4(let bv) = b else { return nil }
+            return .Vector4(simd_quatf.lerp(simd_quatf(safeVector: av), simd_quatf(safeVector: bv), t).vector)
         case .Transform:
             guard case .Transform(let av) = a, case .Transform(let bv) = b else { return nil }
             return .Transform(.lerp(av, bv, t))
@@ -73,9 +73,9 @@ enum NumericValueOperations
                 return rgbDistance + abs(av.w - bv.w)
             }
             return vectorDistance(av, bv, metric: metric)
-        case .Quaternion:
-            guard case .Quaternion(let av) = a, case .Quaternion(let bv) = b else { return nil }
-            let dot = abs(simd_dot(av.normalized.vector, bv.normalized.vector))
+        case .Orientation:
+            guard case .Vector4(let av) = a, case .Vector4(let bv) = b else { return nil }
+            let dot = abs(simd_dot(simd_quatf(safeVector: av).vector, simd_quatf(safeVector: bv).vector))
             return 2 * acos(min(max(dot, 0), 1))
         case .Transform:
             guard case .Transform(let av) = a, case .Transform(let bv) = b else { return nil }

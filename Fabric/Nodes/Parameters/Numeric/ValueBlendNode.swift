@@ -38,9 +38,20 @@ public final class ValueBlendNode: NumericTypeAgnosticNode
     }
 
     /// `source` and `target` blended by `amount` with Satin's `Lerpable`; nil when their
-    /// cases differ or are not blendable. Color travels as `.Vector4`, so it mixes per channel.
-    public static func blended(_ source: PortValue, _ target: PortValue, amount: Float) -> PortValue?
+    /// cases differ or are not blendable. Color and Orientation travel as `.Vector4`, so
+    /// Color mixes per channel; Orientation, named by `portType`, slerps.
+    public static func blended(_ source: PortValue, _ target: PortValue, amount: Float, as portType: PortType = .NumericVirtual) -> PortValue?
     {
+        switch (portType, source, target)
+        {
+        case (.Orientation, _, _):
+            return NumericValueOperations.interpolate(source, target, t: amount, as: .Orientation)
+        case (.Array(portType: .Orientation), .Array(let from), .Array(let to)):
+            return .Array(NumericValueOperations.interpolateArrays(from, to, t: amount, elementType: .Orientation))
+        default:
+            break
+        }
+
         switch (source, target)
         {
         case (.Float(let from), .Float(let to)):
@@ -51,8 +62,6 @@ public final class ValueBlendNode: NumericTypeAgnosticNode
             return .Vector3(.lerp(from, to, amount))
         case (.Vector4(let from), .Vector4(let to)):
             return .Vector4(.lerp(from, to, amount))
-        case (.Quaternion(let from), .Quaternion(let to)):
-            return .Quaternion(.lerp(from, to, amount))
         case (.Transform(let from), .Transform(let to)):
             return .Transform(.lerp(from, to, amount))
         case (.Array(let from), .Array(let to)):
@@ -88,6 +97,6 @@ public final class ValueBlendNode: NumericTypeAgnosticNode
               let amount = inputBlendAmount.value
         else { return }
 
-        outputValue.sendBoxed(Self.blended(source, target, amount: amount.isFinite ? amount : 0))
+        outputValue.sendBoxed(Self.blended(source, target, amount: amount.isFinite ? amount : 0, as: selectedNumericPortType))
     }
 }

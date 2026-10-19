@@ -68,7 +68,8 @@ import MathExpressionEngine
         guard let context = makeContext() else { return }
         let node = MathExpressionNode(context: context, expression: "in a: float; in b: vec2; in c: vec3; in d: vec4; in m: transform; in q: quat; in l: float[][]; out o = a")
 
-        let parameterNames: Set<String> = ["a", "b", "c", "d", "m"]
+        // A quat input is an Orientation port, which carries its quaternion as a Float4Parameter.
+        let parameterNames: Set<String> = ["a", "b", "c", "d", "m", "q"]
         for port in node.inputPorts()
         {
             #expect((port.parameter != nil) == parameterNames.contains(port.name), "\(port.name) [\(port.portType.rawValue)]")

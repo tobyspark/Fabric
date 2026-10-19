@@ -270,7 +270,6 @@ extension NodePort
     @_specialize(exported: true, where Value == simd_float3)
     @_specialize(exported: true, where Value == simd_float3)
     @_specialize(exported: true, where Value == simd_float4)
-    @_specialize(exported: true, where Value == simd_quatf)
     @usableFromInline
     func _send(_ v: Value?, to other: NodePort<Value>, force: Bool = false) {
         let v = Value.normalizePortValueForSend(v)

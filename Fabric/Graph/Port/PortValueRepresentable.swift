@@ -13,7 +13,7 @@ import Satin
 public protocol PortValueRepresentable : Equatable
 {
     /// The value an unwired inlet of this type rests at when nothing else gives
-    /// it one — identity for Transform and Quaternion, zero or empty for the
+    /// it one — identity for Transform, zero or empty for the
     /// others — or nil where there is no natural value, as for a reference
     /// type. See `PortType.restingValue` for where it is applied.
     static var defaultValue: Self? { get }
@@ -52,8 +52,7 @@ public indirect enum PortValue : PortValueRepresentable
     case String(String)
     case Vector2(simd_float2)
     case Vector3(simd_float3)
-    case Vector4(simd_float4)
-    case Quaternion(simd_quatf)
+    case Vector4(simd_float4) // Color and Orientation travel as this too
     case Transform(simd_float4x4)
     case Geometry(Satin.Geometry)
     case Material(Satin.Material)
@@ -457,40 +456,6 @@ extension simd.simd_float4 : PortValueRepresentable
         switch value
         {
         case let .Vector4(v):
-            return v
-        default:
-            return nil
-        }
-    }
-    
-    public func canConvertTo(other:PortType) -> Bool
-    {
-        return false
-    }
-    
-    public func convertTo(other:PortType) -> (any PortValueRepresentable)?
-    {
-        return nil
-    }
-}
-
-// Temporarily enable these - would need work elsewhere
-extension simd.simd_quatf : PortValueRepresentable
-{
-    public static var defaultValue: simd_quatf? { .init(angle: 0, axis: .zero) }
-    public static var portType: PortType { .Quaternion }
-    public var portType: PortType { .Quaternion }
-
-    public func toPortValue() -> PortValue
-    {
-        .Quaternion(self)
-    }
-    
-    public static func fromPortValue(_ value: PortValue) ->  simd.simd_quatf?
-    {
-        switch value
-        {
-        case let .Quaternion(v):
             return v
         default:
             return nil

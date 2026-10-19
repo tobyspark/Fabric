@@ -14,13 +14,13 @@ import simd
 /// through its parameter, and shares that parameter with whatever else reads
 /// it, a shader uniform included. Whether the inspector has a control for the
 /// type is the inspector's concern (see ParameterGroupView): Transform has
-/// none and conforms all the same. Quaternion does not conform: Satin has no
+/// none and conforms all the same. simd_quatf does not conform: Satin has no
 /// quaternion parameter type, so a GenericParameter<simd_quatf> encodes as
-/// .generic, which Satin's decoder traps on; a document holding one would
-/// crash on open (ParameterPort.init(from:) throws first, so the port comes
-/// back plain instead).
+/// .generic, which Satin's decoder traps on. Orientation carries its
+/// quaternion as simd_float4 instead.
 ///
-/// Color is the exception, decided in `PortType.makeFreshParameterPort`.
+/// Color and Orientation are the exceptions, decided in
+/// `PortType.makeFreshParameterPort`.
 public protocol ParameterValueType: PortValueRepresentable {
     static func makeDefaultParameterPort(name: String, description: String, id: UUID) -> Port
 }

@@ -5,8 +5,8 @@
 
 import Satin
 
-let singleNumericTypes: [PortType] = [.Float, .Int, .Vector2, .Vector3, .Vector4, .Color, .Quaternion, .Transform]
-let interpolatableSingleTypes: [PortType] = [.Float, .Vector2, .Vector3, .Vector4, .Color, .Quaternion, .Transform]
+let singleNumericTypes: [PortType] = [.Float, .Int, .Vector2, .Vector3, .Vector4, .Color, .Orientation, .Transform]
+let interpolatableSingleTypes: [PortType] = [.Float, .Vector2, .Vector3, .Vector4, .Color, .Orientation, .Transform]
 let interpolatableArrayTypes: [PortType] = interpolatableSingleTypes.map { .Array(portType: $0) }
 
 func metricParameter(_ description: String) -> ParameterPort<String>

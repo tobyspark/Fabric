@@ -23,7 +23,7 @@ extension PortType
         case .Vector3:    return try isParameterPort ? ParameterPort<simd_float3>.init(from: decoder)   : NodePort<simd_float3>.init(from: decoder)
         case .Vector4:    return try isParameterPort ? ParameterPort<simd_float4>.init(from: decoder)   : NodePort<simd_float4>.init(from: decoder)
         case .Color:      return try isParameterPort ? ParameterPort<simd_float4>.init(from: decoder)   : ColorNodePort.init(from: decoder)
-        case .Quaternion: return try isParameterPort ? ParameterPort<simd_quatf>.init(from: decoder)    : NodePort<simd_quatf>.init(from: decoder)
+        case .Orientation: return try isParameterPort ? OrientationParameterPort.init(from: decoder)   : OrientationNodePort.init(from: decoder)
         case .Transform:  return try isParameterPort ? ParameterPort<simd_float4x4>.init(from: decoder) : NodePort<simd_float4x4>.init(from: decoder)
         case .Geometry:   return try NodePort<Satin.Geometry>.init(from: decoder)
         case .Material:   return try NodePort<Satin.Material>.init(from: decoder)
@@ -63,8 +63,8 @@ extension PortType
             return try isParameterPort ? ParameterPort<ContiguousArray<simd_float4>>.init(from: decoder) : NodePort<ContiguousArray<simd_float4>>.init(from: decoder)
         case .Color:
             return try isParameterPort ? ParameterPort<ContiguousArray<simd_float4>>.init(from: decoder) : ColorArrayNodePort.init(from: decoder)
-        case .Quaternion:
-            return try NodePort<ContiguousArray<simd_quatf>>.init(from: decoder)
+        case .Orientation:
+            return try OrientationArrayNodePort.init(from: decoder)
         case .Transform:
             return try NodePort<ContiguousArray<simd_float4x4>>.init(from: decoder)
         case .Geometry:
@@ -101,8 +101,8 @@ extension PortType
             return try NodePort<Dictionary<String, simd_float4>>.init(from: decoder)
         case .Color:
             return try DeclaredNodePort<Dictionary<String, simd_float4>>.init(from: decoder)
-        case .Quaternion:
-            return try NodePort<Dictionary<String, simd_quatf>>.init(from: decoder)
+        case .Orientation:
+            return try DeclaredNodePort<Dictionary<String, simd_float4>>.init(from: decoder)
         case .Transform:
             return try NodePort<Dictionary<String, simd_float4x4>>.init(from: decoder)
         case .Geometry:
@@ -134,7 +134,7 @@ extension PortType
                             return try NodePort<Dictionary<String, ContiguousArray<simd_float4>>>.init(from: decoder)
         case .Color:
                             return try DeclaredNodePort<Dictionary<String, ContiguousArray<simd_float4>>>.init(from: decoder)
-        case .Quaternion:  return try NodePort<Dictionary<String, ContiguousArray<simd_quatf>>>.init(from: decoder)
+        case .Orientation: return try DeclaredNodePort<Dictionary<String, ContiguousArray<simd_float4>>>.init(from: decoder)
         case .Transform:   return try NodePort<Dictionary<String, ContiguousArray<simd_float4x4>>>.init(from: decoder)
         case .Geometry:    return try NodePort<Dictionary<String, ContiguousArray<Satin.Geometry>>>.init(from: decoder)
         case .Material:    return try NodePort<Dictionary<String, ContiguousArray<Satin.Material>>>.init(from: decoder)
@@ -148,9 +148,10 @@ extension PortType
     /// node's to write.
     ///
     /// Which types can carry a parameter is `ParameterValueType`'s to
-    /// say, save for Color. Color and Vector4 are both simd_float4, so the type
-    /// cannot tell them apart; the colorpicker control is what makes the port
-    /// read back as .Color (see `ParameterPort.portType`).
+    /// say, save for Color and Orientation. They and Vector4 are all simd_float4,
+    /// so the type cannot tell them apart: the colorpicker control is what makes
+    /// a port read back as .Color (see `ParameterPort.portType`), and
+    /// `OrientationParameterPort` declares .Orientation itself.
     private func makeFreshParameterPort(name: String, kind: PortKind, description: String, id: UUID) -> Port?
     {
         guard kind == .Inlet else { return nil }
@@ -158,6 +159,11 @@ extension PortType
         if case .Color = self
         {
             return ParameterPort(parameter: Float4Parameter(name, simd_float4(0, 0, 0, 1), .colorpicker, description), id: id)
+        }
+
+        if case .Orientation = self
+        {
+            return OrientationParameterPort(parameter: Float4Parameter(name, simd_float4(0, 0, 0, 1), .inputfield, description), id: id)
         }
 
         guard let editableType = self.type as? any ParameterValueType.Type else { return nil }
@@ -185,7 +191,7 @@ extension PortType
     }
 
     /// The value a plain inlet of this type starts at: its leaf value type's
-    /// `defaultValue`, so an unwired Quaternion inlet holds identity. A
+    /// `defaultValue`, so an unwired Transform inlet holds identity. A
     /// collection or virtual inlet rests at nothing, so an unwired one still
     /// reads as unwired. A parameter port's parameter supplies its own default
     /// instead.
@@ -210,7 +216,7 @@ extension PortType
         case .Vector3:    return NodePort<simd_float3>(name: name, kind: kind, description: description, id: id)
         case .Vector4:    return NodePort<simd_float4>(name: name, kind: kind, description: description, id: id)
         case .Color:      return ColorNodePort(name: name, kind: kind, description: description, id: id)
-        case .Quaternion: return NodePort<simd_quatf>(name: name, kind: kind, description: description, id: id)
+        case .Orientation: return OrientationNodePort(name: name, kind: kind, description: description, id: id)
         case .Transform:  return NodePort<simd_float4x4>(name: name, kind: kind, description: description, id: id)
         case .Geometry:   return NodePort<Satin.Geometry>(name: name, kind: kind, description: description, id: id)
         case .Material:   return NodePort<Satin.Material>(name: name, kind: kind, description: description, id: id)
@@ -236,7 +242,7 @@ extension PortType
         case .Vector3:     return NodePort<ContiguousArray<simd_float3>>(name: name, kind: kind, description: description, id: id)
         case .Vector4:     return NodePort<ContiguousArray<simd_float4>>(name: name, kind: kind, description: description, id: id)
         case .Color: return ColorArrayNodePort(name: name, kind: kind, description: description, id: id)
-        case .Quaternion:  return NodePort<ContiguousArray<simd_quatf>>(name: name, kind: kind, description: description, id: id)
+        case .Orientation: return OrientationArrayNodePort(name: name, kind: kind, description: description, id: id)
         case .Transform:   return NodePort<ContiguousArray<simd_float4x4>>(name: name, kind: kind, description: description, id: id)
         case .Geometry:    return NodePort<ContiguousArray<Satin.Geometry>>(name: name, kind: kind, description: description, id: id)
         case .Material:    return NodePort<ContiguousArray<Satin.Material>>(name: name, kind: kind, description: description, id: id)
@@ -257,7 +263,7 @@ extension PortType
         case .Vector3:     return NodePort<Dictionary<String, simd_float3>>(name: name, kind: kind, description: description, id: id)
         case .Vector4:     return NodePort<Dictionary<String, simd_float4>>(name: name, kind: kind, description: description, id: id)
         case .Color:       return DeclaredNodePort<Dictionary<String, simd_float4>>(declaredPortType: dictionaryType, name: name, kind: kind, description: description, id: id)
-        case .Quaternion:  return NodePort<Dictionary<String, simd_quatf>>(name: name, kind: kind, description: description, id: id)
+        case .Orientation: return DeclaredNodePort<Dictionary<String, simd_float4>>(declaredPortType: dictionaryType, name: name, kind: kind, description: description, id: id)
         case .Transform:   return NodePort<Dictionary<String, simd_float4x4>>(name: name, kind: kind, description: description, id: id)
         case .Geometry:    return NodePort<Dictionary<String, Satin.Geometry>>(name: name, kind: kind, description: description, id: id)
         case .Material:    return NodePort<Dictionary<String, Satin.Material>>(name: name, kind: kind, description: description, id: id)
@@ -283,7 +289,7 @@ extension PortType
         case .Vector3:     return NodePort<Dictionary<String, ContiguousArray<simd_float3>>>(name: name, kind: kind, description: description, id: id)
         case .Vector4:     return NodePort<Dictionary<String, ContiguousArray<simd_float4>>>(name: name, kind: kind, description: description, id: id)
         case .Color:       return DeclaredNodePort<Dictionary<String, ContiguousArray<simd_float4>>>(declaredPortType: dictionaryType, name: name, kind: kind, description: description, id: id)
-        case .Quaternion:  return NodePort<Dictionary<String, ContiguousArray<simd_quatf>>>(name: name, kind: kind, description: description, id: id)
+        case .Orientation: return DeclaredNodePort<Dictionary<String, ContiguousArray<simd_float4>>>(declaredPortType: dictionaryType, name: name, kind: kind, description: description, id: id)
         case .Transform:   return NodePort<Dictionary<String, ContiguousArray<simd_float4x4>>>(name: name, kind: kind, description: description, id: id)
         case .Geometry:    return NodePort<Dictionary<String, ContiguousArray<Satin.Geometry>>>(name: name, kind: kind, description: description, id: id)
         case .Material:    return NodePort<Dictionary<String, ContiguousArray<Satin.Material>>>(name: name, kind: kind, description: description, id: id)

@@ -48,9 +48,19 @@ extension PortType
                 return false
             }
 
-        // Color and Vector4 share the same Swift type (simd_float4)
-        case .Color, .Vector4:
-            return other == .Color || other == .Vector4
+        case .Color, .Vector4, .Orientation:
+            return self.sharesVector4(with: other)
+
+        case .Array(portType: let elementType):
+            switch other
+            {
+            case .Array(portType: .Virtual):
+                return true
+            case .Array(portType: let otherElementType):
+                return elementType == otherElementType || elementType.sharesVector4(with: otherElementType)
+            default:
+                return false
+            }
 
         default:
             switch other
@@ -61,6 +71,22 @@ extension PortType
             default:
                 return self == other
             }
+        }
+    }
+
+    /// Color and Orientation are both simd_float4, so each connects to a plain
+    /// Vector4 and through it to the other's nodes. They do not connect to each
+    /// other: a color is not a rotation.
+    private func sharesVector4(with other: PortType) -> Bool
+    {
+        switch (self, other)
+        {
+        case (.Vector4, .Vector4), (.Color, .Color), (.Orientation, .Orientation):
+            return true
+        case (.Vector4, .Color), (.Color, .Vector4), (.Vector4, .Orientation), (.Orientation, .Vector4):
+            return true
+        default:
+            return false
         }
     }
 
@@ -80,7 +106,7 @@ extension PortType
     {
         switch self
         {
-        case .Int, .Float, .Vector2, .Vector3, .Vector4, .Color, .Quaternion, .Transform:
+        case .Int, .Float, .Vector2, .Vector3, .Vector4, .Color, .Orientation, .Transform:
             return true
         case .Array(portType: let elementType):
             return elementType.isNumericVirtualCompatible

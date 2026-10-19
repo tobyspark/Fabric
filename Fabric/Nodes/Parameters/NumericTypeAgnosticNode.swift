@@ -42,6 +42,11 @@ public class NumericTypeAgnosticNode: StrategyNode
 
     public override class var separatorAfterFirstStrategy: Bool { true }
 
+    public override class func strategy(forSaved savedStrategy: String) -> String
+    {
+        PortType.currentRawValue(forSaved: savedStrategy)
+    }
+
     public var selectedNumericPortType: PortType
     {
         Self.portType(forStrategy: strategy)

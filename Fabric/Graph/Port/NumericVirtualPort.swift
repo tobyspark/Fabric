@@ -37,8 +37,6 @@ extension PortValue
             return .Vector3
         case .Vector4:
             return .Vector4
-        case .Quaternion:
-            return .Quaternion
         case .Transform:
             return .Transform
         case .Array(let values):

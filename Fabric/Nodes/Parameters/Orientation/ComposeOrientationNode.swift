@@ -11,7 +11,7 @@ import Metal
 public class ComposeOrientationNode: StrategyNode
 {
     public override class var name: String { "Orientation Compose" }
-    public override class var nodeType: Node.NodeType { .Parameter(parameterType: .Quaternion) }
+    public override class var nodeType: Node.NodeType { .Parameter(parameterType: .Orientation) }
     override public class var nodeExecutionMode: Node.ExecutionMode { .Processor }
     override public class var nodeTimeMode: Node.TimeMode { .None }
     override public class var nodeDescription: String { "Builds an Orientation quaternion via one of several strategies: Euler angles, Axis + Angle, or aiming at a Target." }

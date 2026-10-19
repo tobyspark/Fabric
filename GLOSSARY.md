@@ -56,7 +56,7 @@ A `GraphExecutionContext` value passed to every Node's `execute()`. Carries timi
 ## Port Data Types
 
 ### Parameter types (value semantics, grey)
-`Bool`, `Index` (integer), `Number` (float), `String`, `Vector2`, `Vector3`, `Vector4`, `Color` (RGBA Vector4 wrapper), `Quaternion`, `Transform`, `Matrix` (planned).
+`Bool`, `Index` (integer), `Number` (float), `String`, `Vector2`, `Vector3`, `Vector4`, `Color` (RGBA Vector4 wrapper), `Orientation` (quaternion X, Y, Z, W as a Vector4 wrapper; connects to Vector4, not to Color), `Transform`, `Matrix` (planned).
 
 ### Object types (reference semantics, coloured)
 `Geometry`, `Material`, `Shader`, `Image`.
@@ -145,7 +145,7 @@ The Node browser organises Nodes into groups for discovery:
 | **SceneGraph** | Renderer, Camera, Light, Mesh, Loader, Subgraph |
 | **Mesh** | Geometry, Material |
 | **Image** | All image-processing Nodes, Shaders |
-| **Parameter** | Bool, Number, Vector, Quaternion, Transform, Color, String, Array, IO |
+| **Parameter** | Bool, Number, Vector, Orientation, Transform, Color, String, Array, IO |
 | **Utility** | Cursor, Keyboard, Log, Render Info, etc. |
 
 ---

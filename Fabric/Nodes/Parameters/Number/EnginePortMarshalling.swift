@@ -32,7 +32,7 @@ enum EnginePortMarshalling
         case .vec3:             return .Vector3
         case .vec4:             return .Vector4
         case .transform:        return .Transform
-        case .quat:             return .Quaternion
+        case .quat:             return .Orientation
         case .array(let elem):  return .Array(portType: portType(for: elem))
         }
     }
@@ -49,7 +49,7 @@ enum EnginePortMarshalling
         case .vec3(let v):       return .Vector3(v)                       // simd_float3 == SIMD3<Float>
         case .vec4(let v):       return .Vector4(v)
         case .transform(let m):  return .Transform(m)                     // Mat4 == simd_float4x4
-        case .quat(let q):       return .Quaternion(q)                    // Quat == simd_quatf
+        case .quat(let q):       return .Vector4(q.components)            // Orientation travels as simd_float4
         case .array(let els):    return .Array(ContiguousArray(els.map { portValue(for: $0) }))
         }
     }
@@ -73,7 +73,7 @@ enum EnginePortMarshalling
         case (.vec4, .Vector4(let v)):  return .vec4(v)
 
         case (.transform, .Transform(let m)): return .transform(m)
-        case (.quat, .Quaternion(let q)):     return .quat(q)
+        case (.quat, .Vector4(let v)):        return .quat(simd_quatf(vector: v))
 
         case (.array(let elem), .Array(let boxed)):
             var out: [EngineValue] = []
@@ -128,7 +128,7 @@ enum EnginePortMarshalling
         case .vec3:      return (port as? NodePort<simd_float3>)?.value.map(EngineValue.vec3)
         case .vec4:      return (port as? NodePort<simd_float4>)?.value.map(EngineValue.vec4)
         case .transform: return (port as? NodePort<simd_float4x4>)?.value.map(EngineValue.transform)
-        case .quat:      return (port as? NodePort<simd_quatf>)?.value.map(EngineValue.quat)
+        case .quat:      return (port as? NodePort<simd_float4>)?.value.map { .quat(simd_quatf(vector: $0)) }
         case .array(let elem): return readArray(from: port, elementType: elem)
         }
     }
@@ -142,7 +142,7 @@ enum EnginePortMarshalling
         case .vec3:      return (port as? NodePort<ContiguousArray<simd_float3>>)?.value.map { .array($0.map(EngineValue.vec3)) }
         case .vec4:      return (port as? NodePort<ContiguousArray<simd_float4>>)?.value.map { .array($0.map(EngineValue.vec4)) }
         case .transform: return (port as? NodePort<ContiguousArray<simd_float4x4>>)?.value.map { .array($0.map(EngineValue.transform)) }
-        case .quat:      return (port as? NodePort<ContiguousArray<simd_quatf>>)?.value.map { .array($0.map(EngineValue.quat)) }
+        case .quat:      return (port as? NodePort<ContiguousArray<simd_float4>>)?.value.map { .array($0.map { .quat(simd_quatf(vector: $0)) }) }
         case .array:     return nil // nested arrays unsupported
         }
     }
@@ -159,7 +159,7 @@ enum EnginePortMarshalling
         case .vec3(let v):       (port as? NodePort<simd_float3>)?.send(v)
         case .vec4(let v):       (port as? NodePort<simd_float4>)?.send(v)
         case .transform(let m):  (port as? NodePort<simd_float4x4>)?.send(m)
-        case .quat(let q):       (port as? NodePort<simd_quatf>)?.send(q)
+        case .quat(let q):       (port as? NodePort<simd_float4>)?.send(q.components)
         case .array(let els):    sendArray(els, to: port)
         }
     }
@@ -183,7 +183,7 @@ enum EnginePortMarshalling
         case .transform:
             (port as? NodePort<ContiguousArray<simd_float4x4>>)?.send(ContiguousArray(els.compactMap { if case .transform(let m) = $0 { m } else { nil } }))
         case .quat:
-            (port as? NodePort<ContiguousArray<simd_quatf>>)?.send(ContiguousArray(els.compactMap { if case .quat(let q) = $0 { q } else { nil } }))
+            (port as? NodePort<ContiguousArray<simd_float4>>)?.send(ContiguousArray(els.compactMap { if case .quat(let q) = $0 { q.components } else { nil } }))
         case .array:
             return // nested arrays unsupported
         }

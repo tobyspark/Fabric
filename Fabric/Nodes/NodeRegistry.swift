@@ -128,6 +128,10 @@ public class NodeRegistry
         registerCoreAlias("PassThroughNode<SatinGeometry>", PassThroughNode<Geometry>.self)
         registerCoreAlias("PassThroughNode<Satin.SatinGeometry>", PassThroughNode<Geometry>.self)
 
+        // Orientation replaced the simd_quatf-backed Quaternion port type.
+        registerCoreAlias("PassThroughNode<simd_quatf>", OrientationPassThroughNode.self)
+        registerCoreAlias("PassThroughNode<Dictionary<String, simd_quatf>>", PassThroughNode<Dictionary<String, simd_float4>>.self)
+
         // Structural array nodes were previously generic; old docs decode to type-agnostic versions.
         //
         // These suffixes must be spelled the way a *document* spells them, which is

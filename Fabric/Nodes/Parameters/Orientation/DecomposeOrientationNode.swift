@@ -11,7 +11,7 @@ import Metal
 public class DecomposeOrientationNode: StrategyNode
 {
     public override class var name: String { "Orientation Decompose" }
-    public override class var nodeType: Node.NodeType { .Parameter(parameterType: .Quaternion) }
+    public override class var nodeType: Node.NodeType { .Parameter(parameterType: .Orientation) }
     override public class var nodeExecutionMode: Node.ExecutionMode { .Processor }
     override public class var nodeTimeMode: Node.TimeMode { .None }
     override public class var nodeDescription: String { "Splits an Orientation quaternion into its Euler angles or Axis + Angle, depending on strategy." }

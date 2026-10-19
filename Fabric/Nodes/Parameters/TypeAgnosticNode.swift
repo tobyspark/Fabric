@@ -29,6 +29,11 @@ public class TypeAgnosticNode: StrategyNode
 
     public override class var separatorAfterFirstStrategy: Bool { true }
 
+    public override class func strategy(forSaved savedStrategy: String) -> String
+    {
+        PortType.currentRawValue(forSaved: savedStrategy)
+    }
+
     /// The currently active port type, derived from the strategy string.
     public var selectedPortType: PortType { PortType(rawValue: strategy) ?? .Virtual }
 

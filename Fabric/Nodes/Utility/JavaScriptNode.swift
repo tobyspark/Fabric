@@ -216,8 +216,6 @@ private final class JavaScriptValueBridge
             return [Double(value.x), Double(value.y), Double(value.z)]
         case .Vector4(let value):
             return [Double(value.x), Double(value.y), Double(value.z), Double(value.w)]
-        case .Quaternion(let value):
-            return [Double(value.vector.x), Double(value.vector.y), Double(value.vector.z), Double(value.vector.w)]
         case .Transform(let value):
             let column0 = value.columns.0
             let column1 = value.columns.1
@@ -276,13 +274,9 @@ private final class JavaScriptValueBridge
         case .Vector3:
             guard let array = value.toArray() as? [Double], array.count == 3 else { return nil }
             return .Vector3(simd_float3(Float(array[0]), Float(array[1]), Float(array[2])))
-        case .Vector4, .Color:
+        case .Vector4, .Color, .Orientation:
             guard let array = value.toArray() as? [Double], array.count == 4 else { return nil }
             return .Vector4(simd_float4(Float(array[0]), Float(array[1]), Float(array[2]), Float(array[3])))
-        case .Quaternion:
-            guard let array = value.toArray() as? [Double], array.count == 4 else { return nil }
-            let vector = simd_float4(Float(array[0]), Float(array[1]), Float(array[2]), Float(array[3]))
-            return .Quaternion(simd_quatf(vector: vector))
         case .Transform:
             guard let array = value.toArray() as? [Double], array.count == 16 else { return nil }
             return .Transform(simd_float4x4(columns: (

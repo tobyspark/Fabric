@@ -17,7 +17,7 @@ import MathExpressionEngine
         #expect(EnginePortMarshalling.portType(for: .vec3) == .Vector3)
         #expect(EnginePortMarshalling.portType(for: .vec4) == .Vector4)
         #expect(EnginePortMarshalling.portType(for: .transform) == .Transform)
-        #expect(EnginePortMarshalling.portType(for: .quat) == .Quaternion)
+        #expect(EnginePortMarshalling.portType(for: .quat) == .Orientation)
         #expect(EnginePortMarshalling.portType(for: .array(.transform)) == .Array(portType: .Transform))
         #expect(EnginePortMarshalling.portType(for: .array(.vec3)) == .Array(portType: .Vector3))
     }
@@ -62,11 +62,12 @@ import MathExpressionEngine
         let q = Quat(components: SIMD4(0.1, 0.2, 0.3, 0.9))
         assertRoundTrips(.quat(q), as: .quat)
 
-        if case .Quaternion(let host) = EnginePortMarshalling.portValue(for: .quat(q))
+        // Orientation travels as Vector4, (x, y, z, w) with w last.
+        if case .Vector4(let host) = EnginePortMarshalling.portValue(for: .quat(q))
         {
-            #expect(host.vector == SIMD4<Float>(0.1, 0.2, 0.3, 0.9))   // (ix, iy, iz, r) == (x, y, z, w)
+            #expect(host == SIMD4<Float>(0.1, 0.2, 0.3, 0.9))
         }
-        else { Issue.record("expected .Quaternion box") }
+        else { Issue.record("expected a .Vector4 box") }
     }
 
     @Test func arrayRoundTrip()

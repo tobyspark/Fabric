@@ -42,8 +42,7 @@ open class AnyPort: Codable {
             case .String: self.base = try ProxyPort<String>(from: portDecoder)
             case .Vector2: self.base = try ProxyPort<simd_float2>(from: portDecoder)
             case .Vector3: self.base = try ProxyPort<simd_float3>(from: portDecoder)
-            case .Vector4, .Color: self.base = try ProxyPort<simd_float4>(from: portDecoder)
-            case .Quaternion: self.base = try ProxyPort<simd_quatf>(from: portDecoder)
+            case .Vector4, .Color, .Orientation: self.base = try ProxyPort<simd_float4>(from: portDecoder)
             case .Transform: self.base = try ProxyPort<simd_float4x4>(from: portDecoder)
             case .Geometry: self.base = try ProxyPort<Geometry>(from: portDecoder)
             case .Material: self.base = try ProxyPort<Material>(from: portDecoder)
@@ -57,8 +56,8 @@ open class AnyPort: Codable {
                 case .String:           self.base = try ProxyPort<ContiguousArray<String>>(from: portDecoder)
                 case .Vector2:          self.base = try ProxyPort<ContiguousArray<simd_float2>>(from: portDecoder)
                 case .Vector3:          self.base = try ProxyPort<ContiguousArray<simd_float3>>(from: portDecoder)
-                case .Vector4, .Color:  self.base = try ProxyPort<ContiguousArray<simd_float4>>(from: portDecoder)
-                case .Quaternion:       self.base = try ProxyPort<ContiguousArray<simd_quatf>>(from: portDecoder)
+                case .Vector4, .Color, .Orientation:
+                                        self.base = try ProxyPort<ContiguousArray<simd_float4>>(from: portDecoder)
                 case .Transform:        self.base = try ProxyPort<ContiguousArray<simd_float4x4>>(from: portDecoder)
                 case .Geometry:         self.base = try ProxyPort<ContiguousArray<Geometry>>(from: portDecoder)
                 case .Material:         self.base = try ProxyPort<ContiguousArray<Material>>(from: portDecoder)
@@ -102,9 +101,8 @@ open class AnyPort: Codable {
         case .String:     return try ProxyPort<Dictionary<String, String>>(from: decoder)
         case .Vector2:    return try ProxyPort<Dictionary<String, simd_float2>>(from: decoder)
         case .Vector3:    return try ProxyPort<Dictionary<String, simd_float3>>(from: decoder)
-        case .Vector4, .Color:
+        case .Vector4, .Color, .Orientation:
                           return try ProxyPort<Dictionary<String, simd_float4>>(from: decoder)
-        case .Quaternion: return try ProxyPort<Dictionary<String, simd_quatf>>(from: decoder)
         case .Transform:  return try ProxyPort<Dictionary<String, simd_float4x4>>(from: decoder)
         case .Geometry:   return try ProxyPort<Dictionary<String, Geometry>>(from: decoder)
         case .Material:   return try ProxyPort<Dictionary<String, Material>>(from: decoder)
@@ -126,9 +124,8 @@ open class AnyPort: Codable {
         case .String:     return try ProxyPort<Dictionary<String, ContiguousArray<String>>>(from: decoder)
         case .Vector2:    return try ProxyPort<Dictionary<String, ContiguousArray<simd_float2>>>(from: decoder)
         case .Vector3:    return try ProxyPort<Dictionary<String, ContiguousArray<simd_float3>>>(from: decoder)
-        case .Vector4, .Color:
+        case .Vector4, .Color, .Orientation:
                           return try ProxyPort<Dictionary<String, ContiguousArray<simd_float4>>>(from: decoder)
-        case .Quaternion: return try ProxyPort<Dictionary<String, ContiguousArray<simd_quatf>>>(from: decoder)
         case .Transform:  return try ProxyPort<Dictionary<String, ContiguousArray<simd_float4x4>>>(from: decoder)
         case .Geometry:   return try ProxyPort<Dictionary<String, ContiguousArray<Geometry>>>(from: decoder)
         case .Material:   return try ProxyPort<Dictionary<String, ContiguousArray<Material>>>(from: decoder)

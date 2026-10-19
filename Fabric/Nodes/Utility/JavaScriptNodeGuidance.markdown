@@ -32,7 +32,7 @@ A script with nothing to send declares no return type, and returns nothing.
 | `Vector3` | `[x, y, z]` | three numbers |
 | `Vector4` | `[x, y, z, w]` | four numbers |
 | `Color` | `[r, g, b, a]` | four numbers |
-| `Quaternion` | `[x, y, z, w]` | four numbers, `w` last |
+| `Orientation` | `[x, y, z, w]`, a quaternion | four numbers, `w` last |
 | `Transform` | sixteen numbers | sixteen numbers, column-major |
 | `Geometry` | `{ type, handleID, vertexCount, indexCount, boundsMin, boundsMax }` | the object it arrived as |
 | `Material` | `{ type, handleID, label, hasShader, parameterCount, blending }` | the object it arrived as |

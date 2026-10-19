@@ -378,9 +378,10 @@ struct PortConnectionTests {
     private static let allConnectablePortTypes: [PortType] = [
         .Virtual, .NumericVirtual,
         .Bool, .Int, .Float, .String,
-        .Vector2, .Vector3, .Vector4, .Color, .Quaternion, .Transform,
+        .Vector2, .Vector3, .Vector4, .Color, .Orientation, .Transform,
         .Geometry, .Material, .Image,
         .Array(portType: .Virtual), .Array(portType: .Float),
+        .Array(portType: .Vector4), .Array(portType: .Color), .Array(portType: .Orientation),
     ]
 
     @Test("Compatibility is direction independent for every port type pair")
@@ -401,7 +402,7 @@ struct PortConnectionTests {
         // Regression: the .Bool/.Int/.Float/.String and .Color/.Vector4 cases used
         // to omit .Virtual from their accepted set, so a virtual outlet could not
         // be dragged into a typed inlet even though the reverse drag worked.
-        for portType in [PortType.Bool, .Int, .Float, .String, .Vector4, .Color] {
+        for portType in [PortType.Bool, .Int, .Float, .String, .Vector4, .Color, .Orientation] {
             let typedInlet = portType.makeFreshPort(name: "Typed", kind: .Inlet)
             let typedOutlet = portType.makeFreshPort(name: "Typed", kind: .Outlet)
             let virtualInlet = PortType.Virtual.makeFreshPort(name: "Value", kind: .Inlet)

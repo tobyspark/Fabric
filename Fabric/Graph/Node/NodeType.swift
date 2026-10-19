@@ -61,7 +61,7 @@ extension Node
             case Boolean
             case Number
             case Vector
-            case Quaternion
+            case Orientation
             case Transform
             case Color
 

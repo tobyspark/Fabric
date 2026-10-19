@@ -240,7 +240,7 @@ struct PortHydrationTests
         #expect(floatPort.parameter != nil)
     }
 
-    @Test("An inlet rests at its type's default: Transform through its parameter, Quaternion as a plain port, a collection at nothing")
+    @Test("An inlet rests at its type's default: Transform and Orientation through their parameters, a collection at nothing")
     func inletRestsAtTypeDefault() throws
     {
         guard let context = makeContext() else { return }
@@ -248,8 +248,8 @@ struct PortHydrationTests
         let transform = PortType.Transform.makeFreshPort(name: "Transform", kind: .Inlet) as? ParameterPort<simd_float4x4>
         #expect(transform?.value == matrix_identity_float4x4)
 
-        let quaternion = PortType.Quaternion.makeFreshPort(name: "Rotation", kind: .Inlet) as? NodePort<simd_quatf>
-        #expect(quaternion?.value == simd_quatf.defaultValue)
+        let orientation = PortType.Orientation.makeFreshPort(name: "Rotation", kind: .Inlet) as? ParameterPort<simd_float4>
+        #expect(orientation?.value == simd_float4(0, 0, 0, 1))
 
         #expect(PortType.Transform.makeFreshPort(name: "Transform", kind: .Outlet).snapshotValue() == nil)
         #expect(PortType.Array(portType: .Transform).makeFreshPort(name: "Transforms", kind: .Inlet).snapshotValue() == nil)
@@ -260,8 +260,8 @@ struct PortHydrationTests
         let input = try #require(switchNode.findPort(named: "input0") as ParameterPort<simd_float4x4>?)
         #expect(input.value == matrix_identity_float4x4)
 
-        let passThrough = PassThroughNode<simd_quatf>(context: context)
-        #expect(passThrough.input.value == simd_quatf.defaultValue)
+        let passThrough = OrientationPassThroughNode(context: context)
+        #expect(passThrough.input.value == simd_float4(0, 0, 0, 1))
     }
 
     @Test("A type change leaves the replacement inlet at its type's default, on the old id")
@@ -292,23 +292,6 @@ struct PortHydrationTests
         let float3A = try #require(distance.findPort(named: "inputA") as ParameterPort<simd_float3>?)
         #expect(float3A.id == savedAID)
         #expect(float3A.published)
-    }
-
-    @Test("A saved quaternion parameter port comes back as a plain port on its id, not a crash")
-    func quaternionParameterPortDecodesAsPlainPort() throws
-    {
-        guard let context = makeContext() else { return }
-
-        // What a build before this rule wrote for a quaternion uniform.
-        let port = ParameterPort(parameter: GenericParameter<simd_quatf>("Rotation", simd_quatf(angle: 0.5, axis: simd_float3(0, 1, 0))))
-        let data = try JSONEncoder().encode(AnyPort(port))
-
-        let decoder = JSONDecoder()
-        decoder.context = DecoderContext(documentContext: context)
-        let decoded = try decoder.decode(AnyPort.self, from: data).base
-        #expect(decoded is NodePort<simd_quatf>)
-        #expect(decoded.parameter == nil)
-        #expect(decoded.id == port.id)
     }
 
     @Test("A Transform parameter port survives a save as a parameter port, value and id intact")

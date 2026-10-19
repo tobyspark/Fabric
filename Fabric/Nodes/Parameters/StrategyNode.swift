@@ -108,6 +108,10 @@ open class StrategyNode: Node
     /// When true, the picker inserts a visual separator after the first strategy in the list.
     open class var separatorAfterFirstStrategy: Bool { false }
 
+    /// The strategy a document saved as `savedStrategy` reopens as. Subclasses
+    /// whose strategy strings have been renamed map the old spelling to the new.
+    open class func strategy(forSaved savedStrategy: String) -> String { savedStrategy }
+
     /// Standard behaviour: the node-generated `subtitle` is the active strategy,
     /// e.g. "vec3" for "Vector Compose", or "Random" for "Number Generator".
     /// `NodeTitleView` renders the type name after it (yielding "vec3 Vector
@@ -174,7 +178,7 @@ open class StrategyNode: Node
 
         // Initializing assignment — didSet does not fire here, matching the
         // plain-creation path (ports are (re)built by rebuildPorts below).
-        self.strategy = decoded ?? Self.defaultStrategy
+        self.strategy = decoded.map(Self.strategy(forSaved:)) ?? Self.defaultStrategy
 
         try super.init(from: decoder)
 
